@@ -8,6 +8,7 @@ public:
 
     virtual double operator()(double x){}
     virtual double operator()(double *x){}
+    virtual double operator()(double **x){}
 
     virtual ~Function(){}
 };
