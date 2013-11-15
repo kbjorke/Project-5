@@ -1,36 +1,40 @@
 #include <iostream>
 #include <cstdlib>
+#include <cmath>
 
 #include "Function.h"
 
 using namespace std;
 
-class func2x: public Function
+class Integrand: public Function
 {
-    public:
-    func2x(){}
+    private:
+    double alpha, mu, rho;
+    double dist[3];
 
-    double operator()(double x)
+    public:
+    Integrand(double alpha)
     {
-        return 2*x;
+        this->alpha = alpha;
     }
-};
 
-class funcxy: public Function
-{
-    public:
-    funcxy(){}
 
-    double x,y;
-
-    double operator()(double *variables)
+    double operator()(double **r)
     {
-        x = variables[0];
-        y = variables[1];
+        mu = r[0][0]*r[0][0] + \
+                r[0][1]*r[0][1] + \
+                r[0][2]*r[0][2] + \
+                r[1][0]*r[1][0] + \
+                r[1][1]*r[1][1] + \
+                r[1][2]*r[1][2];
 
-        cout << x << " " << y << endl;
+        dist[0] = r[1][0] - r[0][0];
+        dist[1] = r[1][1] - r[0][1];
+        dist[2] = r[1][2] - r[0][2];
 
-        return x*y;
+        rho = sqrt(dist[0]*dist[0] + dist[1]*dist[1] + dist[2]*dist[2]);
+
+        return exp(-alpha*alpha*mu)/rho;
     }
 };
 
@@ -38,17 +42,4 @@ class funcxy: public Function
 
 int main(int argc, char *argv[])
 {
-    func2x func1;
-    funcxy func2;
-    double x;
-    double *variables;
-
-    x = atof(argv[argc-2]);
-
-    variables = new double[2];
-    variables[0] = x;
-    variables[1] = atof(argv[argc-1]);
-
-    cout << func1(x) << endl;
-    cout << func2(variables) << endl;
 }
