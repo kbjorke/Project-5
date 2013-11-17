@@ -3,6 +3,7 @@
 #include <cmath>
 
 #include "Function.h"
+#include "Integral.h"
 
 using namespace std;
 
@@ -37,38 +38,29 @@ class Integrand: public Function
     }
 };
 
-void inner_loops(int maxloop, int maxvalue, int ind, int *val)
+class Func: public Function
 {
-    int i;
+    private:
 
-    if( ind == maxloop )
+    public:
+    Func(){}
+
+
+    double operator()(double *r)
     {
-        for(i = 0; i < ind; i++ )
-        {
-            cout << val[i];
-        }
-        cout << endl;
+        //return exp(-(*r))/(*r);
+        return 1/(2 + (*r)*(*r));
     }
-    else
-    {
-        for( i = 0; i < maxvalue; i++ )
-        {
-            val[ind] = i;
-            inner_loops(maxloop, maxvalue, ind+1, val);
-        }
-    }
-}
-
-void multi_loops(int maxloop, int maxvalue)
-{
-    int i;
-    int *val = new int[maxloop];
-
-    inner_loops(maxloop, maxvalue, 0, val);
-}
-
+};
 
 int main(int argc, char *argv[])
 {
-    multi_loops(5,2);
+    double integral;
+    Func func;
+
+    GaussLegendre integrate(1);
+
+    integral = integrate(0,3,10,func);
+
+    cout << integral << endl;
 }
