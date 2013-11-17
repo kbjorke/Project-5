@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cstring>
 #include <cstdlib>
 #include <cmath>
 
@@ -34,35 +35,34 @@ class Integrand: public Function
 
         rho = sqrt(dist[0]*dist[0] + dist[1]*dist[1] + dist[2]*dist[2]);
 
+        if( rho == 0 ){ cout << "hey";}
         return exp(-alpha*alpha*mu)/rho;
-    }
-};
-
-class Func: public Function
-{
-    private:
-
-    public:
-    Func(){}
-
-
-    double operator()(double *r)
-    {
-        return 1/(2+(*r)*(*r));
-        //return exp(-(*r))/(*r);
-        //return (*r)*(*r*);
     }
 };
 
 int main(int argc, char *argv[])
 {
-    double integral;
-    double a[1];
-    Func func;
+    double integral, upper, lower;
+    int i, N;
 
-    GaussLegendre integrate(1);
+    // Loop over commandline arguments to find parameters and options:
+    for( i = 0; i < argc-1; i++ ){
+        if( strcmp(argv[i], "-lower") == 0 ){
+            lower = atof(argv[i+1]);
+        }
+        if( strcmp(argv[i], "-upper") == 0 ){
+            upper = atof(argv[i+1]);
+        }
+        if( strcmp(argv[i], "-N") == 0 ){
+            N = atoi(argv[i+1]);
+        }
+    }
 
-    integral = integrate(0,3,10,&func);
+    Integrand integrand(1);
+
+    GaussLegendre integrate(6);
+
+    integral = integrate(lower, upper, N, &integrand);
 
     cout << integral << endl;
 }
