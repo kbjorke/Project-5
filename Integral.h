@@ -9,13 +9,13 @@ protected:
     double *params;
     int dimension;
 
-    Function func;
+    Function (*func);
 
 public:
     Integral();
 
     virtual double operator()(double lower, double upper,
-                              int n_points, Function &f){}
+                              int n_points, Function f){}
 
     virtual ~Integral(){}
 };
@@ -35,6 +35,6 @@ class GaussLegendre: public Integral
 
         GaussLegendre(double dimension);
         double operator()(double lower, double upper,
-                          int n_points, Function &f);
+                          int n_points, Function *f);
 };
 #endif // INTEGRAL_H

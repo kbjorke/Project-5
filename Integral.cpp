@@ -17,7 +17,7 @@ void GaussLegendre::dimension_loops(int N, double *param, int ind, int *indices)
 
     if( ind == dimension )
     {
-        term = dimension*func(*param);
+        term = dimension*(*func)(param);
         for(i = 0; i < ind; i++ )
         {
             term *= w[indices[i]];
@@ -36,7 +36,7 @@ void GaussLegendre::dimension_loops(int N, double *param, int ind, int *indices)
 }
 
 double GaussLegendre::operator()(double lower, double upper,
-                  int n_points, Function &f)
+                  int n_points, Function *f)
 {
     param = new double[dimension];
     x = new double[n_points];
