@@ -48,19 +48,21 @@ class Func: public Function
 
     double operator()(double *r)
     {
+        return 1/(2+(*r)*(*r));
         //return exp(-(*r))/(*r);
-        return 1/(2 + (*r)*(*r));
+        //return (*r)*(*r*);
     }
 };
 
 int main(int argc, char *argv[])
 {
     double integral;
+    double a[1];
     Func func;
 
     GaussLegendre integrate(1);
 
-    integral = integrate(0,3,10,func);
+    integral = integrate(0,3,10,&func);
 
     cout << integral << endl;
 }
