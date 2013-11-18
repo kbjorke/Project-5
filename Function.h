@@ -6,9 +6,8 @@ class Function
 public:
     Function();
 
-    virtual double operator()(double x){}
+    //virtual double operator()(double x){}
     virtual double operator()(double *x){}
-    virtual double operator()(double **x){}
 
     virtual ~Function(){}
 };
