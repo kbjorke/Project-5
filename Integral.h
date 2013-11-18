@@ -12,7 +12,7 @@ protected:
     Function (*func);
 
 public:
-    Integral();
+    Integral(){}
 
     virtual double operator()(double lower, double upper,
                               int n_points, Function f){}
@@ -37,4 +37,19 @@ class GaussLegendre: public Integral
         double operator()(double lower, double upper,
                           int n_points, Function *f);
 };
+
+class GaussHermite: public Integral
+{
+    private:
+        double integral, term;
+        double *param, *x, *w;
+
+        void dimension_loops(int N, double *param, int ind, int *indices);
+
+    public:
+
+        GaussHermite(double dimension);
+        double operator()(int n_points, Function *f);
+};
+
 #endif // INTEGRAL_H
