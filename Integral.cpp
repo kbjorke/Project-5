@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include "Integral.h"
 #include "lib.h"
 #include "hermite.h"
@@ -14,7 +16,7 @@ void GaussLegendre::dimension_loops(int N, double *param, int ind, int *indices)
 
     if( ind == dimension )
     {
-        term = dimension*(*func)(param);
+        term = (*func)(param);
         for(i = 0; i < ind; i++ )
         {
             term *= w[indices[i]];
@@ -60,15 +62,23 @@ GaussHermite::GaussHermite(double dimension)
 void GaussHermite::dimension_loops(int N, double *param, int ind, int *indices)
 {
     int i;
+    double mu;
 
     if( ind == dimension )
     {
-        term = dimension*(*func)(param);
+
+        mu = 0;
+
+        term = (*func)(param);
         for(i = 0; i < ind; i++ )
         {
             term *= w[indices[i]];
+            mu += param[i]*param[i];
         }
-        integral += term;
+        // Check for posibility to get exponential part outside
+        // dimension_loop, with intention of making GaussQuad
+        // Class.
+        integral += term*exp(mu);
     }
     else
     {
