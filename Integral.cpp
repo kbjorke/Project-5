@@ -1,4 +1,5 @@
 #include <cmath>
+#include <cstdlib>
 
 #include "Integral.h"
 #include "lib.h"
@@ -108,4 +109,52 @@ double GaussHermite::operator()(int n_points, Function *f)
     dimension_loops(n_points, param, 0, indices);
 
     return integral;
+}
+
+MonteCarloBF::MonteCarloBF(double dimension)
+{
+    this->dimension = dimension;
+}
+
+double MonteCarloBF::operator()(double lower, double upper,
+                                int n_points, Function *f)
+{
+    int i, dim;
+    double random_num;
+
+    param = new double[dimension];
+    func = f;
+
+    integral = 0;
+    variance = 0;
+
+    jacobidet = 1;
+    for( dim = 0; dim < dimension; dim++ )
+    {
+        jacobidet *= (upper - lower);
+    }
+
+    srand(time(NULL));
+    for( i = 0; i < n_points; i++ )
+    {
+        for( dim = 0; dim < dimension; dim++ )
+        {
+            random_num = (double)rand() /  RAND_MAX;
+            param[dim] = lower + random_num*(upper - lower);
+        }
+
+        term = (*func)(param);
+        integral += term;
+        variance += term*term;
+    }
+
+    integral = jacobidet*integral/((double) n_points);
+    variance = jacobidet*variance/((double) n_points);
+
+    return integral;
+}
+
+double MonteCarloBF::get_variance()
+{
+    return variance;
 }

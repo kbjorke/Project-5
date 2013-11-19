@@ -52,4 +52,17 @@ class GaussHermite: public Integral
         double operator()(int n_points, Function *f);
 };
 
+class MonteCarloBF: public Integral
+{
+    private:
+        double integral, variance, term, jacobidet;
+        double *param;
+
+    public:
+        MonteCarloBF(double dimension);
+        double operator()(double lower, double upper,
+                          int n_points, Function *f);
+        double get_variance();
+};
+
 #endif // INTEGRAL_H
