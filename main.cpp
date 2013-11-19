@@ -48,6 +48,24 @@ class Integrand: public Function
     }
 };
 
+class Func: public Function
+{
+    private:
+
+    public:
+    Func(){}
+
+    double operator()(double *r)
+    {
+        //double x;
+
+        //x = (*r);
+
+        //return x*x*exp(-x*x - 2*x);
+        return (*r)*(*r)*exp(-(*r)*(*r) - 2*(*r));
+    }
+};
+
 int main(int argc, char *argv[])
 {
     double integral, upper, lower;
@@ -73,6 +91,7 @@ int main(int argc, char *argv[])
         }
     }
 
+    /*
     Integrand integrand(1);
 
     if( strcmp(method, "GaussLegendre") == 0 ){
@@ -83,6 +102,11 @@ int main(int argc, char *argv[])
         GaussHermite integrate(6);
         integral = integrate(N, &integrand);
     }
+    */
+
+    Func func;
+    GaussHermite integrate(1);
+    cout << integrate(N, &func);
 
     // Want to have integral evaluation here, problems with integral
     // variable, not declared in scope.
