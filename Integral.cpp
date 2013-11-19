@@ -2,6 +2,7 @@
 #include <cstdlib>
 
 #include "Integral.h"
+#include "Function.h"
 #include "lib.h"
 #include "hermite.h"
 
@@ -146,10 +147,13 @@ double MonteCarloBF::operator()(double lower, double upper,
         term = (*func)(param);
         integral += term;
         variance += term*term;
-    }
+   }
 
-    integral = jacobidet*integral/((double) n_points);
-    variance = jacobidet*variance/((double) n_points);
+    integral = integral/((double) n_points);
+    variance = variance/((double) n_points) - integral*integral;
+
+    variance = jacobidet*sqrt(variance/((double) n_points));
+    integral = jacobidet*integral;
 
     return integral;
 }
