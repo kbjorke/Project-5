@@ -5,6 +5,7 @@
 #include "Function.h"
 #include "lib.h"
 #include "hermite.h"
+#include "gaussiandeviate.h"
 
 
 GaussLegendre::GaussLegendre(double dimension)
@@ -173,7 +174,9 @@ double MonteCarloIS::operator()(double lower, double upper,
                                 int n_points, Function *f)
 {
     int i, dim;
-    double random_num;
+    double random_num, mu;
+
+    long int idum = -1;
 
     param = new double[dimension];
     func = f;
@@ -192,11 +195,13 @@ double MonteCarloIS::operator()(double lower, double upper,
     {
         for( dim = 0; dim < dimension; dim++ )
         {
-            random_num = (double)rand() /  RAND_MAX;
+            mu = 0;
+            random_num = gaussian_deviate(&idum);
             param[dim] = lower + random_num*(upper - lower);
+            mu += param[dim]*param[dim];
         }
 
-        term = (*func)(param);
+        term = (*func)(param)*exp(-0.5*mu);
         integral += term;
         variance += term*term;
    }
