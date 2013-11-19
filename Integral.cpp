@@ -162,3 +162,55 @@ double MonteCarloBF::get_variance()
 {
     return variance;
 }
+
+
+MonteCarloIS::MonteCarloIS(double dimension)
+{
+    this->dimension = dimension;
+}
+
+double MonteCarloIS::operator()(double lower, double upper,
+                                int n_points, Function *f)
+{
+    int i, dim;
+    double random_num;
+
+    param = new double[dimension];
+    func = f;
+
+    integral = 0;
+    variance = 0;
+
+    jacobidet = 1;
+    for( dim = 0; dim < dimension; dim++ )
+    {
+        jacobidet *= (upper - lower);
+    }
+
+    srand(time(NULL));
+    for( i = 0; i < n_points; i++ )
+    {
+        for( dim = 0; dim < dimension; dim++ )
+        {
+            random_num = (double)rand() /  RAND_MAX;
+            param[dim] = lower + random_num*(upper - lower);
+        }
+
+        term = (*func)(param);
+        integral += term;
+        variance += term*term;
+   }
+
+    integral = integral/((double) n_points);
+    variance = variance/((double) n_points) - integral*integral;
+
+    variance = jacobidet*sqrt(variance/((double) n_points));
+    integral = jacobidet*integral;
+
+    return integral;
+}
+
+double MonteCarloIS::get_variance()
+{
+    return variance;
+}

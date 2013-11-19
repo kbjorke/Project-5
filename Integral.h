@@ -65,4 +65,17 @@ class MonteCarloBF: public Integral
         double get_variance();
 };
 
+class MonteCarloIS: public Integral
+{
+    private:
+        double integral, variance, term, jacobidet;
+        double *param;
+
+    public:
+        MonteCarloIS(double dimension);
+        double operator()(double lower, double upper,
+                          int n_points, Function *f);
+        double get_variance();
+};
+
 #endif // INTEGRAL_H
