@@ -90,6 +90,12 @@ int main(int argc, char *argv[])
         variance = integrate.get_variance();
         cout << variance << endl;
     }
+    if( strcmp(method, "MonteCarloIS") == 0 ){
+        MonteCarloIS integrate(6);
+        integral = integrate(lower, upper, N, &integrand);
+        variance = integrate.get_variance();
+        cout << variance << endl;
+    }
 
     // Want to have integral evaluation here, problems with integral
     // variable, not declared in scope.
