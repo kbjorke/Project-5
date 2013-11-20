@@ -27,9 +27,9 @@ class GaussLegendre: public Integral
     private:
 
         double integral, term;
-        double *param, *x, *w;
+        double *args, *x, *w;
 
-        void dimension_loops(int N, double *param, int ind, int *indices);
+        void dimension_loops(int N, double *args, int ind, int *indices);
 
     public:
 
@@ -42,9 +42,9 @@ class GaussHermite: public Integral
 {
     private:
         double integral, term;
-        double *param, *x, *w;
+        double *args, *x, *w;
 
-        void dimension_loops(int N, double *param, int ind, int *indices);
+        void dimension_loops(int N, double *args, int ind, int *indices);
 
     public:
 
@@ -56,7 +56,7 @@ class MonteCarloBF: public Integral
 {
     private:
         double integral, variance, term, jacobidet;
-        double *param;
+        double *args;
 
     public:
         MonteCarloBF(double dimension);
@@ -69,7 +69,7 @@ class MonteCarloIS: public Integral
 {
     private:
         double integral, variance, term, jacobidet;
-        double *param;
+        double *args;
 
     public:
         MonteCarloIS(double dimension);
