@@ -7,12 +7,14 @@ SOURCES += main.cpp \
     Integral.cpp \
     lib.cpp \
     hermite.cpp \
-    gaussiandeviate.cpp
+    gaussiandeviate.cpp \
+    Hamiltonian.cpp
 
 HEADERS += \
     Function.h \
     Integral.h \
     lib.h \
     hermite.h \
-    gaussiandeviate.h
+    gaussiandeviate.h \
+    Hamiltonian.h
 
