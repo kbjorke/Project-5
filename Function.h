@@ -3,11 +3,20 @@
 
 class Function
 {
-public:
-    Function();
+private:
+    double h;
 
-    //virtual double operator()(double x){}
-    virtual double operator()(double *x){}
+protected:
+    int dimension;
+
+public:
+    Function(int dimension);
+
+    virtual double operator()(double *args){}
+    virtual double set_params(double *args){}
+
+    virtual void derivative(double *args, double *diff1);
+    virtual double derivative2(double *args);
 
     virtual ~Function(){}
 };
