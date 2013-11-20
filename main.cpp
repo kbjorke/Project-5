@@ -15,17 +15,18 @@ class Integrand: public Function
     double dist[3];
 
     public:
-    Integrand(double alpha)
+    Integrand(int dimension) : Function(dimension)
     {
-        this->alpha = alpha;
     }
 
+    double set_params(double *params)
+    {
+        alpha = *params;
+    }
 
     double operator()(double *r)
     {
         int i;
-
-
 
         mu = 0;
         for( i = 0; i < 3; i++ )
@@ -36,7 +37,6 @@ class Integrand: public Function
         }
         rho = sqrt(dist[0]*dist[0] + dist[1]*dist[1] + dist[2]*dist[2]);
 
-
         if( rho == 0 )
         {
             return 0;
@@ -44,17 +44,34 @@ class Integrand: public Function
         else
         {
             return exp(-alpha*alpha*mu)/rho;
+            //return 1/rho;
         }
+    }
+};
+
+class Func: public Function
+{
+    private:
+
+    public:
+    Func(int dimension) : Function(dimension)
+    {
+    }
+
+    double operator()(double *r)
+    {
+        return 2*(*r)*(*r) + 4*(*r) + 6;
     }
 };
 
 
 int main(int argc, char *argv[])
 {
-    double integral, upper, lower, variance;
+    double integral, upper, lower, variance, a;
     int i, N;
     char *method;
 
+    /*
     // Loop over commandline arguments to find parameters and options:
     for( i = 0; i < argc-1; i++ ){
         if( strcmp(argv[i], "-method") == 0 ){
@@ -74,7 +91,10 @@ int main(int argc, char *argv[])
         }
     }
 
-    Integrand integrand(1);
+    Integrand integrand(6);
+
+    a = 1;
+    integrand.set_params(&a);
 
     if( strcmp(method, "GaussLegendre") == 0 ){
         GaussLegendre integrate(6);
@@ -102,4 +122,16 @@ int main(int argc, char *argv[])
     // integral = integrate(lower, upper, N, &integrand);
 
     cout << integral << endl;
+    */
+
+    Func func(1);
+
+    double x = 0;
+    double *diff1 = new double[1];
+
+    func.derivative(&x, diff1);
+
+    cout << func(&x) << endl;
+    cout << diff1[0] << endl;
+    cout << func.derivative2(&x) << endl;
 }
