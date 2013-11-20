@@ -13,13 +13,13 @@ GaussLegendre::GaussLegendre(double dimension)
     this->dimension = dimension;
 }
 
-void GaussLegendre::dimension_loops(int N, double *param, int ind, int *indices)
+void GaussLegendre::dimension_loops(int N, double *args, int ind, int *indices)
 {
     int i;
 
     if( ind == dimension )
     {
-        term = (*func)(param);
+        term = (*func)(args);
         for(i = 0; i < ind; i++ )
         {
             term *= w[indices[i]];
@@ -30,9 +30,9 @@ void GaussLegendre::dimension_loops(int N, double *param, int ind, int *indices)
     {
         for( i = 0; i < N; i++ )
         {
-            param[ind] = x[i];
+            args[ind] = x[i];
             indices[ind] = i;
-            dimension_loops(N, param, ind+1, indices);
+            dimension_loops(N, args, ind+1, indices);
         }
     }
 }
@@ -40,7 +40,7 @@ void GaussLegendre::dimension_loops(int N, double *param, int ind, int *indices)
 double GaussLegendre::operator()(double lower, double upper,
                   int n_points, Function *f)
 {
-    param = new double[dimension];
+    args = new double[dimension];
     x = new double[n_points];
     w = new double[n_points];
 
@@ -52,7 +52,7 @@ double GaussLegendre::operator()(double lower, double upper,
 
     integral = 0;
 
-    dimension_loops(n_points, param, 0, indices);
+    dimension_loops(n_points, args, 0, indices);
 
     return integral;
 }
@@ -62,7 +62,7 @@ GaussHermite::GaussHermite(double dimension)
     this->dimension = dimension;
 }
 
-void GaussHermite::dimension_loops(int N, double *param, int ind, int *indices)
+void GaussHermite::dimension_loops(int N, double *args, int ind, int *indices)
 {
     int i;
     double mu;
@@ -72,11 +72,11 @@ void GaussHermite::dimension_loops(int N, double *param, int ind, int *indices)
 
         mu = 0;
 
-        term = (*func)(param);
+        term = (*func)(args);
         for(i = 0; i < ind; i++ )
         {
             term *= w[indices[i]];
-            mu += param[i]*param[i];
+            mu += args[i]*args[i];
         }
         // Check for posibility to get exponential part outside
         // dimension_loop, with intention of making GaussQuad
@@ -87,16 +87,16 @@ void GaussHermite::dimension_loops(int N, double *param, int ind, int *indices)
     {
         for( i = 0; i < N; i++ )
         {
-            param[ind] = x[i];
+            args[ind] = x[i];
             indices[ind] = i;
-            dimension_loops(N, param, ind+1, indices);
+            dimension_loops(N, args, ind+1, indices);
         }
     }
 }
 
 double GaussHermite::operator()(int n_points, Function *f)
 {
-    param = new double[dimension];
+    args = new double[dimension];
     x = new double[n_points];
     w = new double[n_points];
 
@@ -108,7 +108,7 @@ double GaussHermite::operator()(int n_points, Function *f)
 
     integral = 0;
 
-    dimension_loops(n_points, param, 0, indices);
+    dimension_loops(n_points, args, 0, indices);
 
     return integral;
 }
@@ -124,7 +124,7 @@ double MonteCarloBF::operator()(double lower, double upper,
     int i, dim;
     double random_num;
 
-    param = new double[dimension];
+    args = new double[dimension];
     func = f;
 
     integral = 0;
@@ -142,10 +142,10 @@ double MonteCarloBF::operator()(double lower, double upper,
         for( dim = 0; dim < dimension; dim++ )
         {
             random_num = (double)rand() /  RAND_MAX;
-            param[dim] = lower + random_num*(upper - lower);
+            args[dim] = lower + random_num*(upper - lower);
         }
 
-        term = (*func)(param);
+        term = (*func)(args);
         integral += term;
         variance += term*term;
    }
@@ -153,8 +153,8 @@ double MonteCarloBF::operator()(double lower, double upper,
     integral = integral/((double) n_points);
     variance = variance/((double) n_points) - integral*integral;
 
-    variance = jacobidet*sqrt(variance/((double) n_points));
     integral = jacobidet*integral;
+    variance = jacobidet*sqrt(variance/((double) n_points));
 
     return integral;
 }
@@ -174,43 +174,49 @@ double MonteCarloIS::operator()(double lower, double upper,
                                 int n_points, Function *f)
 {
     int i, dim;
-    double random_num, mu;
+    double random_num, mu, sqrt2;
 
     long int idum = -1;
 
-    param = new double[dimension];
+    args = new double[dimension];
     func = f;
 
     integral = 0;
     variance = 0;
 
-    jacobidet = 1;
+    jacobidet = pow(acos(-1),dimension/2); //1;
+    /*
     for( dim = 0; dim < dimension; dim++ )
     {
         jacobidet *= (upper - lower);
     }
+    */
+
+    sqrt2 = 1/sqrt(2);
 
     srand(time(NULL));
     for( i = 0; i < n_points; i++ )
     {
+        mu = 0;
         for( dim = 0; dim < dimension; dim++ )
         {
-            mu = 0;
-            random_num = gaussian_deviate(&idum);
-            param[dim] = lower + random_num*(upper - lower);
-            mu += param[dim]*param[dim];
+            random_num = gaussian_deviate(&idum)*sqrt2;
+            args[dim] = lower + random_num*(upper - lower);
+            mu += args[dim]*args[dim];
         }
 
-        term = (*func)(param)*exp(-0.5*mu);
+        term = (*func)(args); //*exp(mu);
         integral += term;
         variance += term*term;
+
+        //cout << mu << " " << exp(log(term) + mu) << " " << term  << endl;
    }
 
     integral = integral/((double) n_points);
     variance = variance/((double) n_points) - integral*integral;
 
-    variance = jacobidet*sqrt(variance/((double) n_points));
     integral = jacobidet*integral;
+    variance = jacobidet*sqrt(variance/((double) n_points));
 
     return integral;
 }
