@@ -51,24 +51,21 @@ class GaussLegendre: public GaussQuad
                                  double *x, double *w,
                                  int n_points);
         double new_term(double *args, int ind, int *indices);
+
     public:
         GaussLegendre(int dimension);
-        //double operator()(double lower, double upper,
-        //                  int n_points, Function *f);
 };
 
-class GaussHermite: public Integral
+class GaussHermite: public GaussQuad
 {
     private:
-        double integral, term;
-        double *args, *x, *w;
-
-        void dimension_loops(int N, double *args, int ind, int *indices);
+        void get_weigths(double lower, double upper,
+                                 double *x, double *w,
+                                 int n_points);
+        double new_term(double *args, int ind, int *indices);
 
     public:
-
         GaussHermite(int dimension);
-        double operator()(int n_points, Function *f);
 };
 
 class MonteCarloBF: public Integral

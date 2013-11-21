@@ -13,8 +13,6 @@ GaussQuad::GaussQuad(int dimension)
     this->dimension = dimension;
 }
 
-
-
 void GaussQuad::dimension_loops(int N, double *args, int ind, int *indices)
 {
     int i;
@@ -55,7 +53,6 @@ double GaussQuad::operator()(double lower, double upper,
 }
 
 
-
 GaussLegendre::GaussLegendre(int dimension) : GaussQuad(dimension){}
 
 void GaussLegendre::get_weigths(double lower, double upper,
@@ -79,61 +76,33 @@ double GaussLegendre::new_term(double *args, int ind, int *indices)
 }
 
 
-GaussHermite::GaussHermite(int dimension)
+GaussHermite::GaussHermite(int dimension) : GaussQuad(dimension){}
+
+void GaussHermite::get_weigths(double lower, double upper,
+                                 double *x, double *w,
+                                 int n_points)
 {
-    this->dimension = dimension;
-}
-
-void GaussHermite::dimension_loops(int N, double *args, int ind, int *indices)
-{
-    int i;
-    double mu;
-
-    if( ind == dimension )
-    {
-
-        mu = 0;
-
-        term = (*func)(args);
-        for(i = 0; i < ind; i++ )
-        {
-            term *= w[indices[i]];
-            mu += args[i]*args[i];
-        }
-        // Check for posibility to get exponential part outside
-        // dimension_loop, with intention of making GaussQuad
-        // Class.
-        integral += term*exp(mu);
-    }
-    else
-    {
-        for( i = 0; i < N; i++ )
-        {
-            args[ind] = x[i];
-            indices[ind] = i;
-            dimension_loops(N, args, ind+1, indices);
-        }
-    }
-}
-
-double GaussHermite::operator()(int n_points, Function *f)
-{
-    args = new double[dimension];
-    x = new double[n_points];
-    w = new double[n_points];
-
-    int *indices = new int[dimension];
-
-    func = f;
-
     gausshermite(x, w, n_points);
-
-    integral = 0;
-
-    dimension_loops(n_points, args, 0, indices);
-
-    return integral;
 }
+
+double GaussHermite::new_term(double *args, int ind, int *indices)
+{
+    static int i;
+    static double term, mu;
+
+    mu = 0;
+
+    term = (*func)(args);
+    for(i = 0; i < ind; i++ )
+    {
+        term *= w[indices[i]];
+        mu += args[i]*args[i];
+    }
+
+    return term*exp(mu);
+}
+
+
 
 MonteCarloBF::MonteCarloBF(int dimension)
 {
