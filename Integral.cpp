@@ -201,15 +201,13 @@ double MonteCarloIS::operator()(double lower, double upper,
         for( dim = 0; dim < dimension; dim++ )
         {
             random_num = gaussian_deviate(&idum)*sqrt2;
-            args[dim] = lower + random_num*(upper - lower);
+            args[dim] = random_num;
             mu += args[dim]*args[dim];
         }
 
-        term = (*func)(args); //*exp(mu);
+        term = (*func)(args)*exp(mu);
         integral += term;
         variance += term*term;
-
-        //cout << mu << " " << exp(log(term) + mu) << " " << term  << endl;
    }
 
     integral = integral/((double) n_points);
