@@ -44,7 +44,6 @@ class Integrand: public Function
         else
         {
             return exp(-alpha*alpha*mu)/rho;
-            //return 1/rho;
         }
     }
 };
@@ -67,11 +66,11 @@ class Func: public Function
 
 int main(int argc, char *argv[])
 {
+    /*
     double integral, upper, lower, variance, a;
     int i, N;
     char *method;
 
-    /*
     // Loop over commandline arguments to find parameters and options:
     for( i = 0; i < argc-1; i++ ){
         if( strcmp(argv[i], "-method") == 0 ){
@@ -112,7 +111,7 @@ int main(int argc, char *argv[])
     }
     if( strcmp(method, "MonteCarloIS") == 0 ){
         MonteCarloIS integrate(6);
-        integral = integrate(lower, upper, N, &integrand);
+        integral = integrate(N, &integrand);
         variance = integrate.get_variance();
         cout << variance << endl;
     }
