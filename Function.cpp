@@ -15,7 +15,6 @@ void Function::derivative(double *args, double *diff1)
 {
     int i;
     static double arg, arg_p, arg_m;
-    diff1 = new double[dimension];
 
     for( i = 0; i < dimension; i++ )
     {
@@ -42,7 +41,6 @@ double Function::derivative2(double *args)
         arg_m = arg - h;
 
         diff2 += ((*this)(&arg_p) - 2*(*this)(&arg) + (*this)(&arg_m))/(h*h);
-        cout << (*this)(&arg_m) << endl;
     }
     return diff2;
 }
