@@ -6,7 +6,9 @@
 class Integral
 {
 protected:
-    double *params;
+    double integral;
+    double *args;
+
     int dimension;
 
     Function (*func);
@@ -21,21 +23,38 @@ public:
 };
 
 
-
-class GaussLegendre: public Integral
+class GaussQuad: public Integral
 {
     private:
+        void dimension_loops(int N, double *args,
+                             int ind, int *indices);
 
-        double integral, term;
-        double *args, *x, *w;
+    protected:
+        double *x, *w;
 
-        void dimension_loops(int N, double *args, int ind, int *indices);
+        virtual void get_weigths(double lower, double upper,
+                                 double *x, double *w,
+                                 int n_points){}
+        virtual double new_term(double *args, int ind, int *indices){}
 
     public:
-
-        GaussLegendre(double dimension);
+        GaussQuad(int dimension);
         double operator()(double lower, double upper,
                           int n_points, Function *f);
+};
+
+
+class GaussLegendre: public GaussQuad
+{
+    private:
+        void get_weigths(double lower, double upper,
+                                 double *x, double *w,
+                                 int n_points);
+        double new_term(double *args, int ind, int *indices);
+    public:
+        GaussLegendre(int dimension);
+        //double operator()(double lower, double upper,
+        //                  int n_points, Function *f);
 };
 
 class GaussHermite: public Integral
@@ -48,7 +67,7 @@ class GaussHermite: public Integral
 
     public:
 
-        GaussHermite(double dimension);
+        GaussHermite(int dimension);
         double operator()(int n_points, Function *f);
 };
 
@@ -59,7 +78,7 @@ class MonteCarloBF: public Integral
         double *args;
 
     public:
-        MonteCarloBF(double dimension);
+        MonteCarloBF(int dimension);
         double operator()(double lower, double upper,
                           int n_points, Function *f);
         double get_variance();
@@ -72,9 +91,8 @@ class MonteCarloIS: public Integral
         double *args;
 
     public:
-        MonteCarloIS(double dimension);
-        double operator()(double lower, double upper,
-                          int n_points, Function *f);
+        MonteCarloIS(int dimension);
+        double operator()(int n_points, Function *f);
         double get_variance();
 };
 

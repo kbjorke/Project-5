@@ -8,23 +8,20 @@
 #include "gaussiandeviate.h"
 
 
-GaussLegendre::GaussLegendre(double dimension)
+GaussQuad::GaussQuad(int dimension)
 {
     this->dimension = dimension;
 }
 
-void GaussLegendre::dimension_loops(int N, double *args, int ind, int *indices)
+
+
+void GaussQuad::dimension_loops(int N, double *args, int ind, int *indices)
 {
     int i;
 
     if( ind == dimension )
     {
-        term = (*func)(args);
-        for(i = 0; i < ind; i++ )
-        {
-            term *= w[indices[i]];
-        }
-        integral += term;
+        integral += new_term(args, ind, indices);
     }
     else
     {
@@ -37,7 +34,7 @@ void GaussLegendre::dimension_loops(int N, double *args, int ind, int *indices)
     }
 }
 
-double GaussLegendre::operator()(double lower, double upper,
+double GaussQuad::operator()(double lower, double upper,
                   int n_points, Function *f)
 {
     args = new double[dimension];
@@ -48,7 +45,7 @@ double GaussLegendre::operator()(double lower, double upper,
 
     func = f;
 
-    gauleg(lower, upper, x, w, n_points);
+    get_weigths(lower, upper, x, w, n_points);
 
     integral = 0;
 
@@ -57,7 +54,32 @@ double GaussLegendre::operator()(double lower, double upper,
     return integral;
 }
 
-GaussHermite::GaussHermite(double dimension)
+
+
+GaussLegendre::GaussLegendre(int dimension) : GaussQuad(dimension){}
+
+void GaussLegendre::get_weigths(double lower, double upper,
+                                 double *x, double *w,
+                                 int n_points)
+{
+    gauleg(lower, upper, x, w, n_points);
+}
+
+double GaussLegendre::new_term(double *args, int ind, int *indices)
+{
+    static int i;
+    static double term;
+
+    term = (*func)(args);
+    for(i = 0; i < ind; i++ )
+    {
+        term *= w[indices[i]];
+    }
+    return term;
+}
+
+
+GaussHermite::GaussHermite(int dimension)
 {
     this->dimension = dimension;
 }
@@ -113,7 +135,7 @@ double GaussHermite::operator()(int n_points, Function *f)
     return integral;
 }
 
-MonteCarloBF::MonteCarloBF(double dimension)
+MonteCarloBF::MonteCarloBF(int dimension)
 {
     this->dimension = dimension;
 }
@@ -165,13 +187,12 @@ double MonteCarloBF::get_variance()
 }
 
 
-MonteCarloIS::MonteCarloIS(double dimension)
+MonteCarloIS::MonteCarloIS(int dimension)
 {
     this->dimension = dimension;
 }
 
-double MonteCarloIS::operator()(double lower, double upper,
-                                int n_points, Function *f)
+double MonteCarloIS::operator()(int n_points, Function *f)
 {
     int i, dim;
     double random_num, mu, sqrt2;
