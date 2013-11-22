@@ -6,49 +6,10 @@
 #include "Function.h"
 #include "Integral.h"
 #include "UnixTime.h"
+#include "problem_definitions.h"
+#include "output_functions.h"
 
 using namespace std;
-
-class Integrand: public Function
-{
-    private:
-    double alpha, mu, rho;
-    double dist[3];
-
-    public:
-    Integrand(int dimension) : Function(dimension)
-    {
-    }
-
-    double set_params(double *params)
-    {
-        alpha = *params;
-    }
-
-    double operator()(double *r)
-    {
-        int i;
-
-        mu = 0;
-        for( i = 0; i < 3; i++ )
-        {
-            mu += r[0+i]*r[0+i] + r[3+i]*r[3+i];
-
-            dist[i] = r[3+i] - r[i];
-        }
-        rho = sqrt(dist[0]*dist[0] + dist[1]*dist[1] + dist[2]*dist[2]);
-
-        if( rho == 0 )
-        {
-            return 0;
-        }
-        else
-        {
-            return exp(-alpha*alpha*mu)/rho;
-        }
-    }
-};
-
 
 int main(int argc, char *argv[])
 {
@@ -76,34 +37,34 @@ int main(int argc, char *argv[])
     }
 
     Integrand integrand(6);
+    Integral *integrate;
 
     a = 1;
     integrand.set_params(&a);
 
     if( strcmp(method, "GaussLegendre") == 0 ){
-        GaussLegendre integrate(6);
-        integral = integrate(lower, upper, N, &integrand);
+        integrate = new GaussLegendre(6);
     }
     if( strcmp(method, "GaussHermite") == 0 ){
-        GaussHermite integrate(6);
-        integral = integrate(lower, upper, N, &integrand);
+        integrate = new GaussHermite(6);
     }
     if( strcmp(method, "MonteCarloBF") == 0 ){
-        MonteCarloBF integrate(6);
-        integral = integrate(lower, upper, N, &integrand);
-        variance = integrate.get_variance();
-        cout << variance << endl;
+        integrate = new MonteCarloBF(6);
     }
     if( strcmp(method, "MonteCarloIS") == 0 ){
-        MonteCarloIS integrate(6);
-        integral = integrate(lower, upper, N, &integrand);
-        variance = integrate.get_variance();
+        integrate = new MonteCarloIS(6);
+    }
+
+    integral = (*integrate)(lower, upper, N, &integrand);
+
+
+    if( string(method).find(string("MonteCarlo"))!=string(method).npos )
+    {
+        variance = (*integrate).get_variance();
         cout << variance << endl;
     }
 
-    // Want to have integral evaluation here, problems with integral
-    // variable, not declared in scope.
-    // integral = integrate(lower, upper, N, &integrand);
-
     cout << integral << endl;
+
+    //test_integrators();
 }
