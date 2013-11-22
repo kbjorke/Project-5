@@ -104,112 +104,100 @@ double GaussHermite::new_term(double *args, int ind, int *indices)
 
 
 
-MonteCarloBF::MonteCarloBF(int dimension)
+MonteCarlo::MonteCarlo(int dimension)
 {
     this->dimension = dimension;
 }
 
-double MonteCarloBF::operator()(double lower, double upper,
+double MonteCarlo::operator()(double lower, double upper,
                                 int n_points, Function *f)
 {
     int i, dim;
-    double random_num;
 
     args = new double[dimension];
     func = f;
 
     integral = 0;
     variance = 0;
+
+    constant = constant_term(lower, upper);
+
+    for( i = 0; i < n_points; i++ )
+    {
+        term = new_term(lower, upper);
+        integral += term;
+        variance += term*term;
+    }
+
+    integral = integral/((double) n_points);
+    variance = variance/((double) n_points) - integral*integral;
+
+    integral = constant*integral;
+    variance = constant*sqrt(variance/((double) n_points));
+
+    return integral;
+}
+
+double MonteCarlo::get_variance()
+{
+    return variance;
+}
+
+MonteCarloBF::MonteCarloBF(int dimension) : MonteCarlo(dimension)
+{
+    srand(time(NULL));
+}
+
+double MonteCarloBF::constant_term(double upper, double lower)
+{
+    static int dim;
+    static double jacobidet;
 
     jacobidet = 1;
     for( dim = 0; dim < dimension; dim++ )
     {
         jacobidet *= (upper - lower);
     }
-
-    srand(time(NULL));
-    for( i = 0; i < n_points; i++ )
-    {
-        for( dim = 0; dim < dimension; dim++ )
-        {
-            random_num = (double)rand() /  RAND_MAX;
-            args[dim] = lower + random_num*(upper - lower);
-        }
-
-        term = (*func)(args);
-        integral += term;
-        variance += term*term;
-   }
-
-    integral = integral/((double) n_points);
-    variance = variance/((double) n_points) - integral*integral;
-
-    integral = jacobidet*integral;
-    variance = jacobidet*sqrt(variance/((double) n_points));
-
-    return integral;
+    return jacobidet;
 }
 
-double MonteCarloBF::get_variance()
+double MonteCarloBF::new_term(double lower, double upper)
 {
-    return variance;
-}
+    static int dim;
+    static double random_num;
 
-
-MonteCarloIS::MonteCarloIS(int dimension)
-{
-    this->dimension = dimension;
-}
-
-double MonteCarloIS::operator()(int n_points, Function *f)
-{
-    int i, dim;
-    double random_num, mu, sqrt2;
-
-    long int idum = -1;
-
-    args = new double[dimension];
-    func = f;
-
-    integral = 0;
-    variance = 0;
-
-    jacobidet = pow(acos(-1),dimension/2); //1;
-    /*
     for( dim = 0; dim < dimension; dim++ )
     {
-        jacobidet *= (upper - lower);
+        random_num = (double)rand() /  RAND_MAX;
+        args[dim] = lower + random_num*(upper - lower);
     }
-    */
 
-    sqrt2 = 1/sqrt(2);
-
-    srand(time(NULL));
-    for( i = 0; i < n_points; i++ )
-    {
-        mu = 0;
-        for( dim = 0; dim < dimension; dim++ )
-        {
-            random_num = gaussian_deviate(&idum)*sqrt2;
-            args[dim] = random_num;
-            mu += args[dim]*args[dim];
-        }
-
-        term = (*func)(args)*exp(mu);
-        integral += term;
-        variance += term*term;
-   }
-
-    integral = integral/((double) n_points);
-    variance = variance/((double) n_points) - integral*integral;
-
-    integral = jacobidet*integral;
-    variance = jacobidet*sqrt(variance/((double) n_points));
-
-    return integral;
+    return (*func)(args);
 }
 
-double MonteCarloIS::get_variance()
+
+MonteCarloIS::MonteCarloIS(int dimension) : MonteCarlo(dimension)
 {
-    return variance;
+    idum = -1;
+}
+
+double MonteCarloIS::constant_term(double upper, double lower)
+{
+    return pow(acos(-1),dimension/2);
+}
+
+double MonteCarloIS::new_term(double lower, double upper)
+{
+    static int dim;
+    static double random_num, mu;
+
+    mu = 0;
+    for( dim = 0; dim < dimension; dim++ )
+    {
+        random_num = gaussian_deviate(&idum)/sqrt(2);
+        args[dim] = random_num;
+        mu += args[dim]*args[dim];
+    }
+
+    return (*func)(args)*exp(mu);
 }

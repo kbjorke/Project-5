@@ -23,6 +23,7 @@ public:
 };
 
 
+
 class GaussQuad: public Integral
 {
     private:
@@ -56,6 +57,7 @@ class GaussLegendre: public GaussQuad
         GaussLegendre(int dimension);
 };
 
+
 class GaussHermite: public GaussQuad
 {
     private:
@@ -68,29 +70,41 @@ class GaussHermite: public GaussQuad
         GaussHermite(int dimension);
 };
 
-class MonteCarloBF: public Integral
+
+
+class MonteCarlo: public Integral
 {
-    private:
-        double integral, variance, term, jacobidet;
-        double *args;
+    protected:
+        double variance, term, constant;
+
+        virtual double constant_term(double upper, double lower){}
+        virtual double new_term(double upper, double lower){}
 
     public:
-        MonteCarloBF(int dimension);
+        MonteCarlo(int dimension);
         double operator()(double lower, double upper,
                           int n_points, Function *f);
         double get_variance();
 };
 
-class MonteCarloIS: public Integral
+
+class MonteCarloBF: public MonteCarlo
+{
+    public:
+        MonteCarloBF(int dimension);
+        double constant_term(double upper, double lower);
+        double new_term(double lower, double upper);
+};
+
+
+class MonteCarloIS: public MonteCarlo
 {
     private:
-        double integral, variance, term, jacobidet;
-        double *args;
-
+        long int idum;
     public:
         MonteCarloIS(int dimension);
-        double operator()(int n_points, Function *f);
-        double get_variance();
+        double constant_term(double upper, double lower);
+        double new_term(double upper, double lower);
 };
 
 #endif // INTEGRAL_H
