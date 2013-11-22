@@ -98,7 +98,7 @@ void output_method(string method)
                    "Time" << endl;
 
         outfile.precision(10);
-        for( N = 6; N <= 10; N += 2 )
+        for( N = 6; N <= 60; N += 2 )
         {
             t0 = getUnixTime();
             integral = (*integrate)(lower, upper, N, &integrand);
@@ -130,7 +130,7 @@ void output_method(string method)
                    "Variance" << '\t' << "Time" << endl;
 
         outfile.precision(10);
-        for( N = 100; N <= 1e5; N *= 10 )
+        for( N = 100; N <= 1e10; N *= 10 )
         {
             t0 = getUnixTime();
             integral = (*integrate)(lower, upper, N, &integrand);
