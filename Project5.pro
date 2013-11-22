@@ -9,7 +9,9 @@ SOURCES += main.cpp \
     hermite.cpp \
     gaussiandeviate.cpp \
     Hamiltonian.cpp \
-    UnixTime.cpp
+    UnixTime.cpp \
+    problem_definitions.cpp \
+    output_functions.cpp
 
 HEADERS += \
     Function.h \
@@ -18,6 +20,8 @@ HEADERS += \
     hermite.h \
     gaussiandeviate.h \
     Hamiltonian.h \
-    UnixTime.h
+    UnixTime.h \
+    problem_definitions.h \
+    output_functions.h
 
 LIBS += -lrt
