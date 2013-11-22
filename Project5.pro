@@ -8,7 +8,8 @@ SOURCES += main.cpp \
     lib.cpp \
     hermite.cpp \
     gaussiandeviate.cpp \
-    Hamiltonian.cpp
+    Hamiltonian.cpp \
+    UnixTime.cpp
 
 HEADERS += \
     Function.h \
@@ -16,5 +17,7 @@ HEADERS += \
     lib.h \
     hermite.h \
     gaussiandeviate.h \
-    Hamiltonian.h
+    Hamiltonian.h \
+    UnixTime.h
 
+LIBS += -lrt
