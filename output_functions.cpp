@@ -56,51 +56,12 @@ void test_integrators()
     {
         output_method(methods[i]);
     }
-    /*
-    string output_file;
-    ostringstream oss;
-
-    // Generate filename for output file
-    oss << "data_" << method  << "_n" <<
-           n << "_T" <<
-           setw(3) << setfill('0') << int(T*100) << "_alpha" <<
-           setw(5) << setfill('0') << int(round(alpha*10000)) <<
-           ".txt" << '\0' << endl;
-
-    output_file = oss.str();
-
-    fstream myfile;
-    myfile.open(output_file.c_str(), ios::out);
-
-    // Write out first line in output file, general data about solution
-    myfile << "T: " << T << '\t' <<
-              "d: " << d << '\t' <<
-              "dt: " << delta_t << '\t' <<
-              "dx: " << delta_x << '\t' <<
-              "n: " << n << '\t' <<
-              "m: " << m << '\t' <<
-              "alpha: " << alpha << '\t' <<
-              "method: " << method << '\t' << endl;
-
-    // Writes out solution
-    myfile.precision(10);
-    myfile << scientific;
-    for( j = 0; j < m; j++ ){
-        for( i = 0; i < n; i++ )
-        {
-            myfile << u[i][j] << "   ";
-        }
-        myfile << endl;
-    }
-
-    myfile.close();
-    */
 }
 
 void output_method(string method)
 {
     int i, j, N;
-    double a, lower, upper, integral, t0, t1, time;
+    double a, lower, upper, integral, variance, t0, t1, time;
 
     string output_file;
     ostringstream oss;
@@ -110,6 +71,8 @@ void output_method(string method)
     a = 1;
     integrand.set_params(&a);
 
+    lower = -4;
+    upper = 4;
 
     // Generate filename for output file
     oss << "output_" << method  << ".txt";
@@ -130,18 +93,21 @@ void output_method(string method)
             integrate = new GaussHermite(6);
         }
 
-        outfile << "Method: " << method << '\t' << endl;
+        outfile << "Method: " << method << endl;
+        outfile << "N" << '\t' << "N*dim" << '\t' << "Integral-value" << '\t' <<
+                   "Time" << endl;
 
-        for( N = 6; N <= 20; N += 2 )
+        outfile.precision(10);
+        for( N = 6; N <= 10; N += 2 )
         {
             t0 = getUnixTime();
-            //integral = integrate(lower, upper, N, &integrand);
+            integral = (*integrate)(lower, upper, N, &integrand);
             t1 = getUnixTime();
 
             time = t1-t0;
 
-            outfile << N << '\t' <<
-                       pow(N,6) << '\t' <<
+            outfile << setw(2) << setfill(' ') << N << '\t' <<
+                       setw(10) << setfill(' ') << pow(N,6) << '\t' <<
                        integral << '\t' <<
                        time << endl;
         }
@@ -151,41 +117,36 @@ void output_method(string method)
     {
         if( method.find("MonteCarloBF")!=method.npos )
         {
-            MonteCarloBF integrate(6);
+            integrate = new MonteCarloBF(6);
         }
         if( method.find("MonteCarloIS")!=method.npos )
         {
-            MonteCarloIS integrate(6);
+            integrate = new MonteCarloIS(6);
         }
 
-        outfile << "Method: " << method << '\t' << endl;
-    }
+        outfile << "Method: " << method << endl;
+        outfile << '\t' <<
+                   "N" << '\t' << "Integral-value" << '\t' <<
+                   "Variance" << '\t' << "Time" << endl;
 
-    /*
-    fstream myfile;
-    myfile.open(output_file.c_str(), ios::out);
-
-    // Write out first line in output file, general data about solution
-    myfile << "T: " << T << '\t' <<
-              "d: " << d << '\t' <<
-              "dt: " << delta_t << '\t' <<
-              "dx: " << delta_x << '\t' <<
-              "n: " << n << '\t' <<
-              "m: " << m << '\t' <<
-              "alpha: " << alpha << '\t' <<
-              "method: " << method << '\t' << endl;
-
-    // Writes out solution
-    myfile.precision(10);
-    myfile << scientific;
-    for( j = 0; j < m; j++ ){
-        for( i = 0; i < n; i++ )
+        outfile.precision(10);
+        for( N = 100; N <= 1e5; N *= 10 )
         {
-            myfile << u[i][j] << "   ";
+            t0 = getUnixTime();
+            integral = (*integrate)(lower, upper, N, &integrand);
+            t1 = getUnixTime();
+
+            time = t1-t0;
+
+            variance = (*integrate).get_variance();
+
+            outfile << setw(10) << setfill(' ') << N << '\t' <<
+                       integral << '\t' <<
+                       variance << '\t' <<
+                       time << endl;
         }
-        myfile << endl;
     }
-    */
+
     outfile.close();
 }
 
