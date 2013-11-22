@@ -16,9 +16,10 @@ int main(int argc, char *argv[])
     double integral, upper, lower, variance, a;
     int i, N;
     char *method;
+    bool integrators_test = false;
 
     // Loop over commandline arguments to find parameters and options:
-    for( i = 0; i < argc-1; i++ ){
+    for( i = 0; i < argc; i++ ){
         if( strcmp(argv[i], "-method") == 0 ){
             method = argv[i+1];
         }
@@ -34,37 +35,45 @@ int main(int argc, char *argv[])
         if( strcmp(argv[i], "-N") == 0 ){
             N = atoi(argv[i+1]);
         }
+        if( strcmp(argv[i], "-int_test") == 0 ){
+            integrators_test = true;
+        }
     }
 
-    Integrand integrand(6);
-    Integral *integrate;
-
-    a = 1;
-    integrand.set_params(&a);
-
-    if( strcmp(method, "GaussLegendre") == 0 ){
-        integrate = new GaussLegendre(6);
-    }
-    if( strcmp(method, "GaussHermite") == 0 ){
-        integrate = new GaussHermite(6);
-    }
-    if( strcmp(method, "MonteCarloBF") == 0 ){
-        integrate = new MonteCarloBF(6);
-    }
-    if( strcmp(method, "MonteCarloIS") == 0 ){
-        integrate = new MonteCarloIS(6);
-    }
-
-    integral = (*integrate)(lower, upper, N, &integrand);
-
-
-    if( string(method).find(string("MonteCarlo"))!=string(method).npos )
+    if( integrators_test )
     {
-        variance = (*integrate).get_variance();
-        cout << variance << endl;
+        test_integrators();
     }
 
-    cout << integral << endl;
+    else
+    {
+        Integrand integrand(6);
+        Integral *integrate;
 
-    //test_integrators();
+        a = 1;
+        integrand.set_params(&a);
+
+        if( strcmp(method, "GaussLegendre") == 0 ){
+            integrate = new GaussLegendre(6);
+        }
+        if( strcmp(method, "GaussHermite") == 0 ){
+            integrate = new GaussHermite(6);
+        }
+        if( strcmp(method, "MonteCarloBF") == 0 ){
+            integrate = new MonteCarloBF(6);
+        }
+        if( strcmp(method, "MonteCarloIS") == 0 ){
+            integrate = new MonteCarloIS(6);
+        }
+
+        integral = (*integrate)(lower, upper, N, &integrand);
+
+        if( string(method).find(string("MonteCarlo"))!=string(method).npos )
+        {
+            variance = (*integrate).get_variance();
+            cout << variance << endl;
+        }
+
+        cout << integral << endl;
+    }
 }
