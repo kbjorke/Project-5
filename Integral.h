@@ -2,6 +2,7 @@
 #define INTEGRAL_H
 
 #include "Function.h"
+#include <iostream>
 
 class Integral
 {
@@ -17,7 +18,8 @@ public:
     Integral(){}
 
     virtual double operator()(double lower, double upper,
-                              int n_points, Function f){}
+                              int n_points, Function *f){}
+    virtual double get_variance(){}
 
     virtual ~Integral(){}
 };
