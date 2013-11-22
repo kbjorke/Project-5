@@ -5,6 +5,7 @@
 
 #include "Function.h"
 #include "Integral.h"
+#include "UnixTime.h"
 
 using namespace std;
 
@@ -48,25 +49,9 @@ class Integrand: public Function
     }
 };
 
-class Func: public Function
-{
-    private:
-
-    public:
-    Func(int dimension) : Function(dimension)
-    {
-    }
-
-    double operator()(double *r)
-    {
-        return 2*(*r)*(*r) + 4*(*r) + 6;
-    }
-};
-
 
 int main(int argc, char *argv[])
 {
-    /*
     double integral, upper, lower, variance, a;
     int i, N;
     char *method;
@@ -101,7 +86,7 @@ int main(int argc, char *argv[])
     }
     if( strcmp(method, "GaussHermite") == 0 ){
         GaussHermite integrate(6);
-        integral = integrate(N, &integrand);
+        integral = integrate(lower, upper, N, &integrand);
     }
     if( strcmp(method, "MonteCarloBF") == 0 ){
         MonteCarloBF integrate(6);
@@ -111,7 +96,7 @@ int main(int argc, char *argv[])
     }
     if( strcmp(method, "MonteCarloIS") == 0 ){
         MonteCarloIS integrate(6);
-        integral = integrate(N, &integrand);
+        integral = integrate(lower, upper, N, &integrand);
         variance = integrate.get_variance();
         cout << variance << endl;
     }
@@ -121,16 +106,4 @@ int main(int argc, char *argv[])
     // integral = integrate(lower, upper, N, &integrand);
 
     cout << integral << endl;
-    */
-
-    Func func(1);
-
-    double x = 0;
-    double *diff1 = new double[1];
-
-    func.derivative(&x, diff1);
-
-    cout << func(&x) << endl;
-    cout << diff1[0] << endl;
-    cout << func.derivative2(&x) << endl;
 }
