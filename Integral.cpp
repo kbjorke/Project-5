@@ -6,6 +6,7 @@
 #include "lib.h"
 #include "hermite.h"
 #include "gaussiandeviate.h"
+#include "UnixTime.h"
 
 
 GaussQuad::GaussQuad(int dimension)
@@ -145,7 +146,7 @@ double MonteCarlo::get_variance()
 
 MonteCarloBF::MonteCarloBF(int dimension) : MonteCarlo(dimension)
 {
-    srand(time(NULL));
+    srand(getUnixTime()*1000);
 }
 
 double MonteCarloBF::constant_term(double upper, double lower)
@@ -178,7 +179,7 @@ double MonteCarloBF::new_term(double lower, double upper)
 
 MonteCarloIS::MonteCarloIS(int dimension) : MonteCarlo(dimension)
 {
-    idum = -1;
+    idum = -(getUnixTime()*100);
 }
 
 double MonteCarloIS::constant_term(double upper, double lower)
