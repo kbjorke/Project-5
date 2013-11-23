@@ -52,6 +52,7 @@ void test_integrators()
     methods[2] = "MonteCarloBF";
     methods[3] = "MonteCarloIS";
 
+    //output_method(methods[2]);
     for( i = 0; i < 4; i++ )
     {
         output_method(methods[i]);
@@ -60,7 +61,8 @@ void test_integrators()
 
 void output_method(string method)
 {
-    int i, j, N;
+    int i, j;
+    long int N;
     double a, lower, upper, integral, variance, t0, t1, time;
 
     string output_file;
@@ -97,9 +99,11 @@ void output_method(string method)
         outfile << "N" << '\t' << "N*dim" << '\t' << "Integral-value" << '\t' <<
                    "Time" << endl;
 
+        cout << method << endl;
         outfile.precision(10);
-        for( N = 6; N <= 60; N += 2 )
+        for( N = 6; N <= 60; N += 6 )
         {
+            cout << N << endl;
             t0 = getUnixTime();
             integral = (*integrate)(lower, upper, N, &integrand);
             t1 = getUnixTime();
@@ -107,7 +111,7 @@ void output_method(string method)
             time = t1-t0;
 
             outfile << setw(2) << setfill(' ') << N << '\t' <<
-                       setw(10) << setfill(' ') << pow(N,6) << '\t' <<
+                       setw(11) << setfill(' ') << pow(N,6) << '\t' <<
                        integral << '\t' <<
                        time << endl;
         }
@@ -129,9 +133,11 @@ void output_method(string method)
                    "N" << '\t' << "Integral-value" << '\t' <<
                    "Variance" << '\t' << "Time" << endl;
 
+        cout << method << endl;
         outfile.precision(10);
         for( N = 100; N <= 1e10; N *= 10 )
         {
+            cout << N << endl;
             t0 = getUnixTime();
             integral = (*integrate)(lower, upper, N, &integrand);
             t1 = getUnixTime();
@@ -140,7 +146,7 @@ void output_method(string method)
 
             variance = (*integrate).get_variance();
 
-            outfile << setw(10) << setfill(' ') << N << '\t' <<
+            outfile << setw(11) << setfill(' ') << N << '\t' <<
                        integral << '\t' <<
                        variance << '\t' <<
                        time << endl;
