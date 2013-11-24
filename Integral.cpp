@@ -1,5 +1,6 @@
 #include <cmath>
 #include <cstdlib>
+#include <mpi.h>
 
 #include "Integral.h"
 #include "Function.h"
@@ -7,6 +8,7 @@
 #include "hermite.h"
 #include "gaussiandeviate.h"
 #include "UnixTime.h"
+//#include "globals.h"
 
 
 GaussQuad::GaussQuad(int dimension)
@@ -36,21 +38,64 @@ void GaussQuad::dimension_loops(int N, double *args, int ind, int *indices)
 double GaussQuad::operator()(double lower, double upper,
                   int n_points, Function *f)
 {
+    int i, N;
+    double h, final_integral;
+
+    int numprocs, my_rank;
+    int argc;
+    char **argv;
+
     args = new double[dimension];
-    x = new double[n_points];
-    w = new double[n_points];
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+
+    if( my_rank == 0 )
+    {
+        N = n_points/numprocs;
+        h = (upper-lower)/numprocs;
+    }
+
+    MPI_Bcast(&N, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&h, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+    integral = my_rank;
+
+    x = new double[N];
+    w = new double[N];
 
     int *indices = new int[dimension];
 
     func = f;
 
-    get_weigths(lower, upper, x, w, n_points);
+    get_weigths(lower + h*my_rank, upper - h*(numprocs-my_rank),
+                x, w, N);
 
     integral = 0;
 
-    dimension_loops(n_points, args, 0, indices);
+    dimension_loops(N, args, 0, indices);
 
-    return integral;
+    if( my_rank == 0 )
+    {
+        MPI_Status status;
+        final_integral = integral;
+        for( i = 0; i < numprocs; i++ )
+        {
+            MPI_Recv(&integral, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 500,
+                     MPI_COMM_WORLD, &status);
+            final_integral += integral;
+        }
+        cout << final_integral << endl;
+
+        return final_integral;
+    }
+    else
+    {
+        MPI_Send(&integral, 1, MPI_DOUBLE, 0, 500, MPI_COMM_WORLD);
+    }
+
+    MPI_Finalize();
 }
 
 
