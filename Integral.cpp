@@ -39,7 +39,7 @@ double GaussQuad::operator()(double lower, double upper,
                   int n_points, Function *f)
 {
     int i, N;
-    double h, final_integral;
+    double h, a, b, final_integral;
 
     int numprocs, my_rank;
     int argc;
@@ -51,16 +51,8 @@ double GaussQuad::operator()(double lower, double upper,
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
-    if( my_rank == 0 )
-    {
-        N = n_points/numprocs;
-        h = (upper-lower)/numprocs;
-    }
-
-    MPI_Bcast(&N, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    MPI_Bcast(&h, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
-    integral = my_rank;
+    N = n_points/numprocs;
+    h = (upper-lower)/numprocs;
 
     x = new double[N];
     w = new double[N];
@@ -68,31 +60,28 @@ double GaussQuad::operator()(double lower, double upper,
     int *indices = new int[dimension];
 
     func = f;
+    a = lower + h*my_rank;
+    b = upper - h*(numprocs-my_rank-1);
 
-    get_weigths(lower + h*my_rank, upper - h*(numprocs-my_rank),
-                x, w, N);
+    cout << a << " " << b << endl;
+    cout << N << endl;
+
+    get_weigths(a, b, x, w, N);
 
     integral = 0;
 
     dimension_loops(N, args, 0, indices);
 
-    if( my_rank == 0 )
-    {
-        MPI_Status status;
-        final_integral = integral;
-        for( i = 0; i < numprocs; i++ )
-        {
-            MPI_Recv(&integral, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 500,
-                     MPI_COMM_WORLD, &status);
-            final_integral += integral;
-        }
-        cout << final_integral << endl;
+    final_integral = 0;
 
-        return final_integral;
-    }
-    else
+    cout << integral << endl;
+
+    MPI_Reduce(&integral, &final_integral, 1, MPI_DOUBLE, MPI_SUM,
+               0, MPI_COMM_WORLD);
+
+    if( my_rank == 0)
     {
-        MPI_Send(&integral, 1, MPI_DOUBLE, 0, 500, MPI_COMM_WORLD);
+        return final_integral;
     }
 
     MPI_Finalize();
