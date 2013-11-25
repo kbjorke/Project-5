@@ -8,7 +8,6 @@
 #include "hermite.h"
 #include "gaussiandeviate.h"
 #include "UnixTime.h"
-//#include "globals.h"
 
 
 GaussQuad::GaussQuad(int dimension)
@@ -38,8 +37,8 @@ void GaussQuad::dimension_loops(int N, double *args, int ind, int *indices)
 double GaussQuad::operator()(double lower, double upper,
                   int n_points, Function *f)
 {
-    int i, N;
-    double h, a, b, final_integral;
+    int i;
+    double final_integral;
 
     int numprocs, my_rank;
     int argc;
@@ -47,39 +46,33 @@ double GaussQuad::operator()(double lower, double upper,
 
     args = new double[dimension];
 
-    MPI_Init(&argc, &argv);
-    MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
-    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+    x = new double[n_points];
+    w = new double[n_points];
 
-    N = n_points/numprocs;
-    h = (upper-lower)/numprocs;
-
-    x = new double[N];
-    w = new double[N];
+    get_weigths(lower, upper, x, w, n_points);
 
     int *indices = new int[dimension];
 
     func = f;
-    a = lower + h*my_rank;
-    b = upper - h*(numprocs-my_rank-1);
-
-    cout << a << " " << b << endl;
-    cout << N << endl;
-
-    get_weigths(a, b, x, w, N);
 
     integral = 0;
-
-    dimension_loops(N, args, 0, indices);
-
     final_integral = 0;
 
-    cout << integral << endl;
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+
+    for( i = my_rank; i < n_points; i += numprocs )
+    {
+        args[0] = x[i];
+        indices[0] = i;
+        dimension_loops(n_points, args, 1, indices);
+    }
 
     MPI_Reduce(&integral, &final_integral, 1, MPI_DOUBLE, MPI_SUM,
                0, MPI_COMM_WORLD);
 
-    if( my_rank == 0)
+    if( my_rank == 0 )
     {
         return final_integral;
     }
@@ -147,30 +140,51 @@ MonteCarlo::MonteCarlo(int dimension)
 double MonteCarlo::operator()(double lower, double upper,
                                 int n_points, Function *f)
 {
-    int i, dim;
+    int i;
+    double local_integral, local_variance;
+
+    int numprocs, my_rank;
+    int argc;
+    char **argv;
 
     args = new double[dimension];
     func = f;
 
     integral = 0;
     variance = 0;
+    local_integral = 0;
+    local_variance = 0;
 
     constant = constant_term(lower, upper);
 
-    for( i = 0; i < n_points; i++ )
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+
+    for( i = my_rank; i < n_points; i += numprocs )
     {
         term = new_term(lower, upper);
-        integral += term;
-        variance += term*term;
+        local_integral += term;
+        local_variance += term*term;
     }
 
-    integral = integral/((double) n_points);
-    variance = variance/((double) n_points) - integral*integral;
+    MPI_Reduce(&local_integral, &integral, 1, MPI_DOUBLE, MPI_SUM,
+               0, MPI_COMM_WORLD);
+    MPI_Reduce(&local_variance, &variance, 1, MPI_DOUBLE, MPI_SUM,
+               0, MPI_COMM_WORLD);
 
-    integral = constant*integral;
-    variance = constant*sqrt(variance/((double) n_points));
+    if( my_rank == 0 )
+    {
+        integral = integral/((double) n_points);
+        variance = variance/((double) n_points) - integral*integral;
 
-    return integral;
+        integral = constant*integral;
+        variance = constant*sqrt(variance/((double) n_points));
+
+        return integral;
+    }
+
+    MPI_Finalize();
 }
 
 double MonteCarlo::get_variance()
