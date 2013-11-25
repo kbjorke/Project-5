@@ -5,6 +5,7 @@ class Function
 {
 private:
     double h;
+    double *arg_p, *arg_m;
 
 protected:
     int dimension;

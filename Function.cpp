@@ -6,7 +6,12 @@ using namespace std;
 
 Function::Function(int dimension)
 {
+    int i;
+
     this->dimension = dimension;
+
+    arg_m = new double[dimension];
+    arg_p = new double[dimension];
 
     h = 0.0001;
 }
@@ -18,16 +23,25 @@ double Function::set_params(double *params)
 
 void Function::derivative(double *args, double *diff1)
 {
-    int i;
-    static double arg, arg_p, arg_m;
+    static int i, j;
 
     for( i = 0; i < dimension; i++ )
     {
-        arg = *args;
-        arg_p = arg + h;
-        arg_m = arg - h;
+        for( j = 0; j < dimension; j++ )
+        {
+            if( i == j )
+            {
+                arg_p[i] = args[i] + h;
+                arg_m[i] = args[i] - h;
+            }
+            else
+            {
+                arg_p[i] = args[i];
+                arg_m[i] = args[i];
+            }
+        }
 
-        diff1[i] = ((*this)(&arg_p) - (*this)(&arg_m))/(2*h);
+        diff1[i] = ((*this)(arg_p) - (*this)(arg_m))/(2*h);
         cout << diff1[i] << endl;
     }
 }
@@ -35,17 +49,27 @@ void Function::derivative(double *args, double *diff1)
 
 double Function::derivative2(double *args)
 {
-    int i;
-    static double arg, arg_p, arg_m;
-    double diff2 = 0;
+    static int i, j;
+    static double diff2 = 0;
 
     for( i = 0; i < dimension; i++ )
     {
-        arg = *args;
-        arg_p = arg + h;
-        arg_m = arg - h;
+        for( j = 0; j < dimension; j++ )
+        {
+            if( i == j )
+            {
+                arg_p[i] = args[i] + h;
+                arg_m[i] = args[i] - h;
+            }
+            else
+            {
+                arg_p[i] = args[i];
+                arg_m[i] = args[i];
+            }
+        }
 
-        diff2 += ((*this)(&arg_p) - 2*(*this)(&arg) + (*this)(&arg_m))/(h*h);
+        cout << (*this)(arg_p) - 2*(*this)(args) + (*this)(arg_m) << endl;
+        diff2 += ((*this)(arg_p) - 2*(*this)(args) + (*this)(arg_m))/(h*h);
     }
     return diff2;
 }
