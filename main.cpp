@@ -18,6 +18,10 @@ int main(int argc, char *argv[])
     char *method;
     bool integrators_test = false;
 
+    double t0, t1, time;
+
+    //numprocs = 0;
+
     // Loop over commandline arguments to find parameters and options:
     for( i = 0; i < argc; i++ ){
         if( strcmp(argv[i], "-method") == 0 ){
@@ -36,9 +40,10 @@ int main(int argc, char *argv[])
             N = atoi(argv[i+1]);
         }
         if( strcmp(argv[i], "-int_test") == 0 ){
-            integrators_test = true;
+         integrators_test = true;
         }
     }
+
 
     if( integrators_test )
     {
@@ -66,7 +71,9 @@ int main(int argc, char *argv[])
             integrate = new MonteCarloIS(6);
         }
 
+        t0 = getUnixTime();
         integral = (*integrate)(lower, upper, N, &integrand);
+        t1 = getUnixTime();
 
         if( string(method).find(string("MonteCarlo"))!=string(method).npos )
         {
@@ -75,5 +82,7 @@ int main(int argc, char *argv[])
         }
 
         cout << integral << endl;
+        cout << t1-t0 << endl;
     }
+
 }
