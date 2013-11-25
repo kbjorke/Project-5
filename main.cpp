@@ -6,6 +6,7 @@
 #include "Function.h"
 #include "Integral.h"
 #include "Hamiltonian.h"
+#include "VariationalMC.h"
 #include "UnixTime.h"
 #include "problem_definitions.h"
 #include "output_functions.h"
@@ -15,6 +16,8 @@ using namespace std;
 int main(int argc, char *argv[])
 {
     double integral, upper, lower, variance, a;
+    double energy, std, acceptance_rate, delta, alpha;
+    double *R_init;
     int i, N;
     char *method;
     bool integrators_test = false;
@@ -34,9 +37,6 @@ int main(int argc, char *argv[])
         }
         if( strcmp(argv[i], "-upper") == 0 ){
             upper = atof(argv[i+1]);
-        }
-        if( strcmp(argv[i], "-N") == 0 ){
-            N = atoi(argv[i+1]);
         }
         if( strcmp(argv[i], "-N") == 0 ){
             N = atoi(argv[i+1]);
@@ -61,6 +61,39 @@ int main(int argc, char *argv[])
         Hamiltonian H_HO;
 
         H_HO.set_potential(&potential);
+
+        R_init = new double[6];
+        for( i = 0; i < 6; i++ )
+        {
+            if( i < 3 )
+            {
+                    R_init[i] = -1;
+            }
+            else
+            {
+                R_init[i] = 1;
+            }
+        }
+        //R_init[0] = 1;
+        //R_init[3] = -1;
+
+        delta = 0.6;
+
+        VariationalMC VMC(6);
+
+        VMC.initialize(&H_HO, delta, R_init);
+
+        Psi_T1 psi_t1(6);
+
+        alpha = 1;
+
+        energy = VMC(&psi_t1, &alpha, N);
+        std = VMC.get_std();
+        acceptance_rate = VMC.get_acceptance_rate();
+
+        cout << energy << endl;
+        cout << std << endl;
+        cout << acceptance_rate << endl;
 
     }
 
