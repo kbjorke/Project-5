@@ -1,5 +1,9 @@
 #include "Hamiltonian.h"
 
+#include <iostream>
+
+using namespace std;
+
 Hamiltonian::Hamiltonian()
 {
 }
