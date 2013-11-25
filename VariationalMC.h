@@ -7,9 +7,9 @@
 class VariationalMC
 {
 private:
-    int dimension;
-    double delta;
-    double *var_params;
+    int dimension, accepts, N;
+    double delta, mean_energy, std_energy, energy, variance;
+    double *var_params, *R, *R_new;
     Hamiltonian *H;
     Function *psi;
 
@@ -20,8 +20,11 @@ private:
     void set_seed(double seed);
 
 public:
-    VariationalMC();
-    void set_variational_params(double *var_params);
+    VariationalMC(int dimension);
+    void initialize(Hamiltonian *H, double delta, double *R_init);
+    double operator()(Function *trial_psi, double *var_params, int n_points);
+    double get_std();
+    double get_acceptance_rate();
 };
 
 #endif // VARIATIONALMC_H
