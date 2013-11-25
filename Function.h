@@ -8,12 +8,14 @@ private:
 
 protected:
     int dimension;
+    double *params;
+
 
 public:
     Function(int dimension);
 
+    virtual double set_params(double *params);
     virtual double operator()(double *args){}
-    virtual double set_params(double *args){}
 
     virtual void derivative(double *args, double *diff1);
     virtual double derivative2(double *args);

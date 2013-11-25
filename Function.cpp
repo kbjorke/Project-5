@@ -11,6 +11,11 @@ Function::Function(int dimension)
     h = 0.0001;
 }
 
+double Function::set_params(double *params)
+{
+    this->params = params;
+}
+
 void Function::derivative(double *args, double *diff1)
 {
     int i;
