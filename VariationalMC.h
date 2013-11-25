@@ -7,6 +7,8 @@
 class VariationalMC
 {
 private:
+    int dimension;
+    double delta;
     double *var_params;
     Hamiltonian *H;
     Function *psi;
@@ -15,6 +17,7 @@ private:
     void get_newpos(double *R, double *R_new);
     void accept_test(double *R, double *R_new);
     double relative_probability(double *R, double *R_new);
+    void set_seed(double seed);
 
 public:
     VariationalMC();

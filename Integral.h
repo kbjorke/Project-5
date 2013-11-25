@@ -2,7 +2,6 @@
 #define INTEGRAL_H
 
 #include "Function.h"
-#include <iostream>
 
 class Integral
 {
