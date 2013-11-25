@@ -23,7 +23,8 @@ SOURCES += main.cpp \
     Hamiltonian.cpp \
     UnixTime.cpp \
     problem_definitions.cpp \
-    output_functions.cpp
+    output_functions.cpp \
+    VariationalMC.cpp
 
 HEADERS += \
     Function.h \
@@ -34,6 +35,7 @@ HEADERS += \
     Hamiltonian.h \
     UnixTime.h \
     problem_definitions.h \
-    output_functions.h
+    output_functions.h \
+    VariationalMC.h
 
 LIBS += -lrt
