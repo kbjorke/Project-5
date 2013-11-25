@@ -5,6 +5,7 @@
 
 #include "Function.h"
 #include "Integral.h"
+#include "Hamiltonian.h"
 #include "UnixTime.h"
 #include "problem_definitions.h"
 #include "output_functions.h"
@@ -17,6 +18,7 @@ int main(int argc, char *argv[])
     int i, N;
     char *method;
     bool integrators_test = false;
+    bool VMC = false;
 
     double t0, t1, time;
 
@@ -42,12 +44,24 @@ int main(int argc, char *argv[])
         if( strcmp(argv[i], "-int_test") == 0 ){
          integrators_test = true;
         }
+        if( strcmp(argv[i], "-VMC") == 0 ){
+         VMC = true;
+        }
     }
 
 
     if( integrators_test )
     {
         test_integrators();
+    }
+
+    else if( VMC )
+    {
+        V_HO potential(6);
+        Hamiltonian H_HO;
+
+        H_HO.set_potential(&potential);
+
     }
 
     else
