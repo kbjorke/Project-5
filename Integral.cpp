@@ -161,12 +161,15 @@ double MonteCarlo::operator()(double lower, double upper,
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
+    set_seed(getUnixTime()*100+my_rank);
+
     for( i = my_rank; i < n_points; i += numprocs )
     {
         term = new_term(lower, upper);
         local_integral += term;
         local_variance += term*term;
     }
+    cout << local_integral << endl;
 
     MPI_Reduce(&local_integral, &integral, 1, MPI_DOUBLE, MPI_SUM,
                0, MPI_COMM_WORLD);
@@ -192,10 +195,7 @@ double MonteCarlo::get_variance()
     return variance;
 }
 
-MonteCarloBF::MonteCarloBF(int dimension) : MonteCarlo(dimension)
-{
-    srand(getUnixTime()*1000);
-}
+MonteCarloBF::MonteCarloBF(int dimension) : MonteCarlo(dimension){}
 
 double MonteCarloBF::constant_term(double upper, double lower)
 {
@@ -224,11 +224,13 @@ double MonteCarloBF::new_term(double lower, double upper)
     return (*func)(args);
 }
 
-
-MonteCarloIS::MonteCarloIS(int dimension) : MonteCarlo(dimension)
+void MonteCarloBF::set_seed(double seed)
 {
-    idum = -(getUnixTime()*100);
+    srand(seed);
 }
+
+
+MonteCarloIS::MonteCarloIS(int dimension) : MonteCarlo(dimension){}
 
 double MonteCarloIS::constant_term(double upper, double lower)
 {
@@ -249,4 +251,9 @@ double MonteCarloIS::new_term(double lower, double upper)
     }
 
     return (*func)(args)*exp(mu);
+}
+
+void MonteCarloIS::set_seed(double seed)
+{
+    idum = -seed;
 }

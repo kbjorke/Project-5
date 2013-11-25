@@ -81,6 +81,7 @@ class MonteCarlo: public Integral
 
         virtual double constant_term(double upper, double lower){}
         virtual double new_term(double upper, double lower){}
+        virtual void set_seed(double seed){}
 
     public:
         MonteCarlo(int dimension);
@@ -96,6 +97,7 @@ class MonteCarloBF: public MonteCarlo
         MonteCarloBF(int dimension);
         double constant_term(double upper, double lower);
         double new_term(double lower, double upper);
+        void set_seed(double seed);
 };
 
 
@@ -107,6 +109,7 @@ class MonteCarloIS: public MonteCarlo
         MonteCarloIS(int dimension);
         double constant_term(double upper, double lower);
         double new_term(double upper, double lower);
+        void set_seed(double seed);
 };
 
 #endif // INTEGRAL_H
