@@ -13,8 +13,21 @@
 
 using namespace std;
 
+class Func: public Function
+{
+    private:
+
+    public:
+    Func(int dimension) : Function(dimension){}
+    double operator()(double *args)
+    {
+        return args[0]*args[1]*args[1] + pow(args[2],3);
+    }
+};
+
 int main(int argc, char *argv[])
 {
+    /*
     double integral, upper, lower, variance, a;
     double energy, std, acceptance_rate, delta, alpha;
     double *R_init;
@@ -87,13 +100,18 @@ int main(int argc, char *argv[])
 
         alpha = 1;
 
+        t0 = getUnixTime();
         energy = VMC(&psi_t1, &alpha, N);
+        t1 = getUnixTime();
+
         std = VMC.get_std();
         acceptance_rate = VMC.get_acceptance_rate();
+        time = t1 - t0;
 
         cout << energy << endl;
         cout << std << endl;
         cout << acceptance_rate << endl;
+        cout << time << endl;
 
     }
 
@@ -131,5 +149,15 @@ int main(int argc, char *argv[])
         cout << integral << endl;
         cout << t1-t0 << endl;
     }
+    */
 
+    double args[3];
+
+    args[0] = 1;
+    args[1] = 1;
+    args[2] = 1;
+
+    Func func(3);
+
+    cout << func.derivative2(args) << endl;
 }
