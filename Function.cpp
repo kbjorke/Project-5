@@ -63,12 +63,12 @@ double Function::derivative2(double *args)
             }
             else
             {
-                arg_p[i] = args[i];
-                arg_m[i] = args[i];
+                arg_p[j] = args[j];
+                arg_m[j] = args[j];
             }
         }
 
-        cout << (*this)(arg_p) - 2*(*this)(args) + (*this)(arg_m) << endl;
+        //cout << (*this)(arg_p) - 2*(*this)(args) + (*this)(arg_m) << endl;
         diff2 += ((*this)(arg_p) - 2*(*this)(args) + (*this)(arg_m))/(h*h);
     }
     return diff2;
