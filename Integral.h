@@ -80,13 +80,13 @@ class MonteCarlo: public Integral
 
         virtual double constant_term(double upper, double lower){}
         virtual double new_term(double upper, double lower){}
-        virtual void set_seed(double seed){}
 
     public:
         MonteCarlo(int dimension);
         double operator()(double lower, double upper,
                           int n_points, Function *f);
         double get_variance();
+        virtual void set_seed(double seed){}
 };
 
 
