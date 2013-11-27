@@ -9,9 +9,9 @@ using namespace std;
  * and h-variable used for the derivation methods.
  *
  * Input:
- *			dimension : Dimensionality of the function,
- *						i.e. the number of variables to
- * 						be given as argument to the function.
+ *          dimension : Dimensionality of the function,
+ *                      i.e. the number of variables to
+ *                      be given as argument to the function.
  * */
 Function::Function(int dimension)
 {
@@ -34,8 +34,8 @@ Function::Function(int dimension)
  * method.
  *
  * Input:
- *			*params : Pointer or array containing the
- *					  parameters to be set.
+ *          *params : Pointer or array containing the
+ *                    parameters to be set.
  * */
 double Function::set_params(double *params)
 {
@@ -52,14 +52,14 @@ double Function::set_params(double *params)
  * exist, this could be implemented by overwriting this virtual method.
  *
  * Input:
- *			*args  : Pointer or array containing the arguments
- * 					 (position) where the derivative will be evaluated.
+ *          *args  : Pointer or array containing the arguments
+ *                   (position) where the derivative will be evaluated.
  *
- *			*diff1 : Pointer or array where the derivative/gradient
- *					  is to be stored.
+ *          *diff1 : Pointer or array where the derivative/gradient
+ *                   is to be stored.
  *
  * NOTE: This method could be improved or split up to get a implementation
- *		 of the derivative of the function in respect to a given variable.
+ *      	 of the derivative of the function in respect to a given variable.
  * */
 void Function::derivative(double *args, double *diff1)
 {
@@ -99,8 +99,8 @@ void Function::derivative(double *args, double *diff1)
  * exist, this could be implemented by overwriting this virtual method.
  *
  * Input:
- *			*args  : Pointer or array containing the arguments
- * 					 (position) where the derivative will be evaluated.
+ *          *args  : Pointer or array containing the arguments
+ *                   (position) where the derivative will be evaluated.
  * */
 double Function::derivative2(double *args)
 {

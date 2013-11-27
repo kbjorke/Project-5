@@ -18,14 +18,14 @@
  * implemented when new fuction object is created.
  *
  * Methods:
- * 			- contructor  : Takes dimensionality of the function.
- * 			- set_params  : Used to set function parameters.
- * 			- operator()  : Used to call the function. Must be
- *							implemented, no standard implementation.
- * 			- derivative  : Used to find the first derivative of the
- * 						    function.
- * 			- derivative2 : Used to find the second derivative of
- * 							the function.
+ *          - contructor  : Takes dimensionality of the function.
+ *          - set_params  : Used to set function parameters.
+ *          - operator()  : Used to call the function. Must be
+ *                          implemented, no standard implementation.
+ *          - derivative  : Used to find the first derivative of the
+ *                          function.
+ *          - derivative2 : Used to find the second derivative of
+ *                          the function.
  * */
 class Function
 {

@@ -10,12 +10,12 @@ Hamiltonian::Hamiltonian(){}
  * at a given position/arguments.
  *
  * Input:
- * 			*psi  : Pointer to a function object containing the
- * 					wavefunction to apply the Hamiltonian to.
+ *          *psi  : Pointer to a function object containing the
+ *                  wavefunction to apply the Hamiltonian to.
  *
- *			*args : Pointer or array containing the parameters
- * 					where the Hamiltonian and wavefunction will
- * 					interact.
+ *          *args : Pointer or array containing the parameters
+ *                  where the Hamiltonian and wavefunction will
+ *                  interact.
  * */
 double Hamiltonian::operator()(Function *psi, double *args)
 {
@@ -31,11 +31,11 @@ double Hamiltonian::operator()(Function *psi, double *args)
  * Used to set the potential for the Hamiltonian.
  *
  * Input:
- * 			*V : Pointer to a function object containing the
- *				 potential to be added.
+ *          *V : Pointer to a function object containing the
+ *               potential to be added.
  *
  * NOTE: Mights add implementation or seperate method to add a
- * 		 new/extra potentials to the Hamiltonian.
+ *       new/extra potentials to the Hamiltonian.
  * */
 void Hamiltonian::set_potential(Function *V)
 {

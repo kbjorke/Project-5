@@ -9,11 +9,11 @@
  * Hamiltonian to be used for Quantum Mechanical problems.
  *
  * Methods:
- * 			- contructor     : Used to create Hamiltonian object.
- * 			- operator()     : Used to apply the Hamiltonian to a state or
- *							   wavefunction at a specific point.
- * 			- set_potential  : Used to set a external potential to the
- *							   Hamiltonian.
+ *          - contructor     : Used to create Hamiltonian object.
+ *          - operator()     : Used to apply the Hamiltonian to a state or
+ *                             wavefunction at a specific point.
+ *          - set_potential  : Used to set a external potential to the
+ *                             Hamiltonian.
  * */
 class Hamiltonian
 {
