@@ -34,8 +34,7 @@ void VariationalMC::initialize(Hamiltonian *H,
 double VariationalMC::operator()(Function *trial_psi,
                                  double *var_params, int n_points)
 {
-    int i;
-    int j;
+    int i, j, k;
     static double local_energy;
 
     this->psi = trial_psi;
@@ -50,21 +49,27 @@ double VariationalMC::operator()(Function *trial_psi,
 
     set_seed(getUnixTime()*1000);
 
+    j = 0;
     for( i = 0; i < n_points; i++ )
     {
-        for( j = 0; j < dimension; j++ )
-        {
-            cout << R[j] << " ";
-        }
-        cout << endl;
         get_newpos(R,R_new);
 
         accept_test(R,R_new);
+
+        /*
+        for( k = 0; k < dimension; k++ )
+        {
+            cout << R[k] << " ";
+        }
+        cout << endl;
+        cout << get_localenergy(R) << endl;
+        */
 
         local_energy = get_localenergy(R);
 
         energy += local_energy;
         variance += local_energy*local_energy;
+
     }
 
     mean_energy = energy/n_points;
@@ -81,13 +86,13 @@ double VariationalMC::get_std()
 
 double VariationalMC::get_acceptance_rate()
 {
-    return (double) accepts/N;
+    return (double) accepts/(N);
 }
 
 
 double VariationalMC::get_localenergy(double *R)
 {
-    return (*H)(psi, R)/(*psi)(R);
+    return (*H)(psi, R) / (*psi)(R);
 }
 
 void VariationalMC::get_newpos(double *R, double *R_new)
@@ -112,18 +117,11 @@ void VariationalMC::accept_test(double *R, double *R_new)
 
     rel_prob = relative_probability(R, R_new);
 
-    if( rel_prob > 1 )
+    random_num = (double)rand() /  RAND_MAX;
+
+    if( random_num <= rel_prob )
     {
         accept = true;
-    }
-    else
-    {
-        random_num = (double)rand() /  RAND_MAX;
-
-        if( random_num <= rel_prob )
-        {
-            accept = true;
-        }
     }
 
     if( accept )

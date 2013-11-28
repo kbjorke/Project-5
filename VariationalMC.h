@@ -7,8 +7,9 @@
 class VariationalMC
 {
 private:
-    int dimension, accepts, N;
-    double delta, mean_energy, std_energy, energy, variance;
+    int dimension, accepts, N, thermalization;
+    double delta, mean_energy, std_energy;
+    double energy, variance;
     double *var_params, *R, *R_new;
     Hamiltonian *H;
     Function *psi;
