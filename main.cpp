@@ -8,7 +8,7 @@
 #include "Function.h"
 #include "Integral.h"
 #include "Hamiltonian.h"
-#include "VariationalMC.h"
+#include "MetropolisQM.h"
 #include "UnixTime.h"
 #include "problem_definitions.h"
 #include "output_functions.h"
@@ -42,10 +42,10 @@ int main(int argc, char *argv[])
             N = atoi(argv[i+1]);
         }
         if( strcmp(argv[i], "-int_test") == 0 ){
-         integrators_test = true;
+            integrators_test = true;
         }
         if( strcmp(argv[i], "-VMC") == 0 ){
-         VMC = true;
+            VMC = true;
         }
     }
 
@@ -61,9 +61,11 @@ int main(int argc, char *argv[])
     else if( VMC )
     {
         V_HO potential(6);
-        Hamiltonian H_HO;
+        Observable *H_HO;
 
-        H_HO.set_potential(&potential);
+        H_HO = new Hamiltonian();
+
+        (*H_HO).set_potential(&potential);
 
         R_init = new double[6];
         for( i = 0; i < 6; i++ )
@@ -80,27 +82,38 @@ int main(int argc, char *argv[])
 
         delta = 0.6;
 
-        VariationalMC VMC(6);
-
-        VMC.initialize(&H_HO, delta, R_init);
-
-        Psi_T1 psi_t1(6);
+        Function *psi_t1;
+        psi_t1 = new Psi_T1(6);
 
         alpha = 1;
 
-        t0 = getUnixTime();
-        energy = VMC(&psi_t1, &alpha, N);
-        t1 = getUnixTime();
+        (*psi_t1).set_params(&alpha);
 
-        std = VMC.get_std();
-        acceptance_rate = VMC.get_acceptance_rate();
-        time = t1 - t0;
+        MetropolisQM metroQM(6);
 
-        cout << energy << endl;
-        cout << std << endl;
-        cout << acceptance_rate << endl;
-        cout << time << endl;
+        metroQM.initialize(psi_t1, delta, R_init);
 
+
+        if( my_rank == 0 )
+        {
+            t0 = getUnixTime();
+        }
+
+        energy = metroQM(H_HO, N);
+
+        if( my_rank == 0 )
+        {
+            t1 = getUnixTime();
+
+            std = metroQM.get_std();
+            acceptance_rate = metroQM.get_acceptance_rate();
+            time = t1 - t0;
+
+            cout << energy << endl;
+            cout << std << endl;
+            cout << acceptance_rate << endl;
+            cout << time << endl;
+        }
     }
 
     else
@@ -126,24 +139,24 @@ int main(int argc, char *argv[])
 
         if( my_rank == 0 )
         {
-        t0 = getUnixTime();
+            t0 = getUnixTime();
         }
         integral = (*integrate)(lower, upper, N, &integrand);
         if( my_rank == 0 )
         {
-        t1 = getUnixTime();
+            t1 = getUnixTime();
 
 
-        if( string(method).find(string("MonteCarlo"))!=string(method).npos )
-        {
-            variance = (*integrate).get_variance();
-            cout << variance << endl;
-        }
+            if( string(method).find(string("MonteCarlo"))!=string(method).npos )
+            {
+                variance = (*integrate).get_variance();
+                cout << variance << endl;
+            }
 
-        time = t1-t0;
+            time = t1-t0;
 
-        cout << integral << endl;
-        cout << time << endl;
+            cout << integral << endl;
+            cout << time << endl;
         }
     }
 
