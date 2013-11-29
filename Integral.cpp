@@ -144,7 +144,7 @@ double MonteCarlo::operator()(double lower, double upper,
 
     constant = constant_term(lower, upper);
 
-    set_seed((int) getUnixTime()*100+my_rank);
+    set_seed((long int) (getUnixTime()*100 + my_rank));
 
     for( i = my_rank; i < n_points; i += numprocs )
     {
@@ -205,7 +205,7 @@ double MonteCarloBF::new_term(double lower, double upper)
     return (*func)(args);
 }
 
-void MonteCarloBF::set_seed(int seed)
+void MonteCarloBF::set_seed(long int seed)
 {
     idum = -seed;
     //srand(seed);
@@ -235,7 +235,7 @@ double MonteCarloIS::new_term(double lower, double upper)
     return (*func)(args)*exp(mu);
 }
 
-void MonteCarloIS::set_seed(int seed)
+void MonteCarloIS::set_seed(long int seed)
 {
     idum = -seed;
 }
