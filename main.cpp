@@ -22,6 +22,7 @@ int main(int argc, char *argv[])
     double *R_init;
     int i, N;
     char *method, *trial_psi;
+    bool solve_integral = false;
     bool integrators_test = false;
     bool VMC = false;
     bool nointeract = false;
@@ -45,6 +46,9 @@ int main(int argc, char *argv[])
         if( strcmp(argv[i], "-N") == 0 ){
             N = atoi(argv[i+1]);
         }
+        if( strcmp(argv[i], "-integral") == 0 ){
+            solve_integral = true;
+        }
         if( strcmp(argv[i], "-int_test") == 0 ){
             integrators_test = true;
         }
@@ -60,7 +64,52 @@ int main(int argc, char *argv[])
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
-    if( integrators_test )
+
+    if( solve_integral )
+    {
+        Integrand integrand(6);
+        Integral *integrate;
+
+        a = 1;
+        integrand.set_params(&a);
+
+        if( strcmp(method, "GaussLegendre") == 0 ){
+            integrate = new GaussLegendre(6);
+        }
+        if( strcmp(method, "GaussHermite") == 0 ){
+            integrate = new GaussHermite(6);
+        }
+        if( strcmp(method, "MonteCarloBF") == 0 ){
+            integrate = new MonteCarloBF(6);
+        }
+        if( strcmp(method, "MonteCarloIS") == 0 ){
+            integrate = new MonteCarloIS(6);
+        }
+
+        if( my_rank == 0 )
+        {
+            t0 = getUnixTime();
+        }
+        integral = (*integrate)(lower, upper, N, &integrand);
+        if( my_rank == 0 )
+        {
+            t1 = getUnixTime();
+
+
+            if( string(method).find(string("MonteCarlo"))!=string(method).npos )
+            {
+                variance = (*integrate).get_variance();
+                cout << variance << endl;
+            }
+
+            time = t1-t0;
+
+            cout << integral << endl;
+            cout << time << endl;
+        }
+    }
+
+    else if( integrators_test )
     {
         test_integrators();
     }
@@ -109,7 +158,6 @@ int main(int argc, char *argv[])
 
         delta = 0.6;
 
-
         alpha = 1;
 
         (*psi_trial).set_params(&alpha);
@@ -137,50 +185,6 @@ int main(int argc, char *argv[])
             cout << energy << endl;
             cout << std << endl;
             cout << acceptance_rate << endl;
-            cout << time << endl;
-        }
-    }
-
-    else
-    {
-        Integrand integrand(6);
-        Integral *integrate;
-
-        a = 1;
-        integrand.set_params(&a);
-
-        if( strcmp(method, "GaussLegendre") == 0 ){
-            integrate = new GaussLegendre(6);
-        }
-        if( strcmp(method, "GaussHermite") == 0 ){
-            integrate = new GaussHermite(6);
-        }
-        if( strcmp(method, "MonteCarloBF") == 0 ){
-            integrate = new MonteCarloBF(6);
-        }
-        if( strcmp(method, "MonteCarloIS") == 0 ){
-            integrate = new MonteCarloIS(6);
-        }
-
-        if( my_rank == 0 )
-        {
-            t0 = getUnixTime();
-        }
-        integral = (*integrate)(lower, upper, N, &integrand);
-        if( my_rank == 0 )
-        {
-            t1 = getUnixTime();
-
-
-            if( string(method).find(string("MonteCarlo"))!=string(method).npos )
-            {
-                variance = (*integrate).get_variance();
-                cout << variance << endl;
-            }
-
-            time = t1-t0;
-
-            cout << integral << endl;
             cout << time << endl;
         }
     }
