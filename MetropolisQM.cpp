@@ -5,6 +5,7 @@
 
 #include "globals.h"
 #include "mpi.h"
+#include "lib.h"
 #include "MetropolisQM.h"
 #include "UnixTime.h"
 
@@ -17,6 +18,8 @@ MetropolisQM::MetropolisQM(int dimension)
 
     R = new double[dimension];
     R_new = new double[dimension];
+
+    thermalization = 10; //default thermalization
 }
 
 void MetropolisQM::initialize(Function *psi,
@@ -48,26 +51,29 @@ double MetropolisQM::operator()(Observable *O, int n_points)
     variance = 0;
     accepts = 0;
 
-    set_seed(getUnixTime()*1000+my_rank);
+    set_seed((int) getUnixTime()*1000+my_rank);
 
     j = 0;
-    for( i = my_rank; i < n_points; i += numprocs )
+    for( i = my_rank; i < n_points+thermalization; i += numprocs )
     {
         get_newpos(R,R_new);
 
         accept_test(R,R_new);
 
-        loc_en = get_localenergy(R);
-        local_energy += loc_en;
-        local_variance += loc_en*loc_en;
+        if( i > thermalization )
+        {
+            loc_en = get_localenergy(R);
+            local_energy += loc_en;
+            local_variance += loc_en*loc_en;
+        }
     }
 
-    MPI_Reduce(&local_energy, &energy, 1, MPI_DOUBLE, MPI_SUM,
-           0, MPI_COMM_WORLD);
-    MPI_Reduce(&local_variance, &variance, 1, MPI_DOUBLE, MPI_SUM,
-           0, MPI_COMM_WORLD);
-    MPI_Reduce(&accepts, &total_accepts, 1, MPI_DOUBLE, MPI_SUM,
-           0, MPI_COMM_WORLD);
+        MPI_Reduce(&local_energy, &energy, 1, MPI_DOUBLE, MPI_SUM,
+               0, MPI_COMM_WORLD);
+        MPI_Reduce(&local_variance, &variance, 1, MPI_DOUBLE, MPI_SUM,
+               0, MPI_COMM_WORLD);
+        MPI_Reduce(&accepts, &total_accepts, 1, MPI_DOUBLE, MPI_SUM,
+               0, MPI_COMM_WORLD);
 
     if( my_rank == 0 )
     {
@@ -117,7 +123,8 @@ void MetropolisQM::accept_test(double *R, double *R_new)
 
     rel_prob = relative_probability(R, R_new);
 
-    random_num = (double)rand() /  RAND_MAX;
+    random_num = ran2(&idum);
+    //random_num = (double)rand() /  RAND_MAX;
 
     if( random_num <= rel_prob )
     {
@@ -141,7 +148,14 @@ double MetropolisQM::relative_probability(double *R, double *R_new)
             ( (*psi)(R)*(*psi)(R) );
 }
 
-void MetropolisQM::set_seed(double seed)
+void MetropolisQM::set_seed(int seed)
 {
-    srand(seed);
+    idum = -seed;
+    //srand(seed);
 }
+
+void MetropolisQM::set_thermalization(int thermalization)
+{
+    this->thermalization = thermalization;
+}
+
