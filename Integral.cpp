@@ -10,10 +10,15 @@
 #include "gaussiandeviate.h"
 #include "UnixTime.h"
 
-
-GaussQuad::GaussQuad(int dimension)
+Integral::Integral(int dimension)
 {
     this->dimension = dimension;
+    args = new double[dimension];
+}
+
+GaussQuad::GaussQuad(int dimension) : Integral(dimension)
+{
+    indices = new int[dimension];
 }
 
 void GaussQuad::dimension_loops(int N, double *args, int ind, int *indices)
@@ -41,14 +46,10 @@ double GaussQuad::operator()(double lower, double upper,
     int i;
     double final_integral;
 
-    args = new double[dimension];
-
     x = new double[n_points];
     w = new double[n_points];
 
     get_weigths(lower, upper, x, w, n_points);
-
-    int *indices = new int[dimension];
 
     func = f;
 
@@ -69,6 +70,9 @@ double GaussQuad::operator()(double lower, double upper,
     {
         return final_integral;
     }
+
+    delete[] x;
+    delete[] w;
 }
 
 
@@ -123,10 +127,7 @@ double GaussHermite::new_term(double *args, int ind, int *indices)
 
 
 
-MonteCarlo::MonteCarlo(int dimension)
-{
-    this->dimension = dimension;
-}
+MonteCarlo::MonteCarlo(int dimension) : Integral(dimension){}
 
 double MonteCarlo::operator()(double lower, double upper,
                                 int n_points, Function *f)
@@ -134,7 +135,6 @@ double MonteCarlo::operator()(double lower, double upper,
     int i;
     double local_integral, local_variance;
 
-    args = new double[dimension];
     func = f;
 
     integral = 0;
@@ -168,8 +168,6 @@ double MonteCarlo::operator()(double lower, double upper,
 
         return integral;
     }
-
-    //MPI_Finalize();
 }
 
 double MonteCarlo::get_variance()

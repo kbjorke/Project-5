@@ -14,7 +14,7 @@ protected:
     Function (*func);
 
 public:
-    Integral(){}
+    Integral(int dimension);
 
     virtual double operator()(double lower, double upper,
                               int n_points, Function *f){}
@@ -32,6 +32,7 @@ class GaussQuad: public Integral
                              int ind, int *indices);
 
     protected:
+        int *indices;
         double *x, *w;
 
         virtual void get_weigths(double lower, double upper,
