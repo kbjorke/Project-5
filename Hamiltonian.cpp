@@ -1,4 +1,5 @@
 #include "Hamiltonian.h"
+#include <iostream>
 
 using namespace std;
 
@@ -23,7 +24,10 @@ double Hamiltonian::operator()(Function *psi, double *args)
 
     K = - 0.5*(*psi).derivative2(args);
 
-    return K + (*V)(args);
+    //cout << K << " " << (*V)(args) << endl;
+    //cout << K + (*V)(args) << endl;
+
+    return K + (*V)(args)*(*psi)(args);
 }
 
 /* Method set_potential.

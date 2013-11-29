@@ -3,6 +3,7 @@
 
 #include <iostream>
 
+#include "mpi.h"
 #include "VariationalMC.h"
 #include "UnixTime.h"
 
@@ -34,12 +35,15 @@ void VariationalMC::initialize(Hamiltonian *H,
 double VariationalMC::operator()(Function *trial_psi,
                                  double *var_params, int n_points)
 {
-    int i, j, k;
-    static double local_energy;
+    int i, j; //, numprocs, my_rank;
+    static double loc_en, local_energy, local_variance;
 
     this->psi = trial_psi;
     this->var_params = var_params;
     this->N = n_points;
+
+    local_energy = 0;
+    local_variance = 0;
 
     energy = 0;
     variance = 0;
@@ -47,10 +51,14 @@ double VariationalMC::operator()(Function *trial_psi,
 
     (*psi).set_params(var_params);
 
-    set_seed(getUnixTime()*1000);
+    MPI_Init(NULL, NULL);
+    MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+
+    set_seed(getUnixTime()*1000+my_rank);
 
     j = 0;
-    for( i = 0; i < n_points; i++ )
+    for( i = my_rank; i < n_points; i += numprocs )
     {
         get_newpos(R,R_new);
 
@@ -65,18 +73,26 @@ double VariationalMC::operator()(Function *trial_psi,
         cout << get_localenergy(R) << endl;
         */
 
-        local_energy = get_localenergy(R);
-
-        energy += local_energy;
-        variance += local_energy*local_energy;
-
+        loc_en = get_localenergy(R);
+        local_energy += loc_en;
+        local_variance += loc_en*loc_en;
     }
 
-    mean_energy = energy/n_points;
-    std_energy = sqrt((variance/n_points -
-                       mean_energy*mean_energy)/n_points);
+    MPI_Reduce(&local_energy, &energy, 1, MPI_DOUBLE, MPI_SUM,
+           0, MPI_COMM_WORLD);
+    MPI_Reduce(&local_variance, &variance, 1, MPI_DOUBLE, MPI_SUM,
+           0, MPI_COMM_WORLD);
 
-    return mean_energy;
+    if( my_rank == 0 )
+    {
+        mean_energy = energy/n_points;
+        std_energy = sqrt((variance/n_points -
+                           mean_energy*mean_energy)/n_points);
+
+        return mean_energy;
+    }
+    MPI_Finalize();
+
 }
 
 double VariationalMC::get_std()
@@ -145,4 +161,3 @@ void VariationalMC::set_seed(double seed)
 {
     srand(seed);
 }
-

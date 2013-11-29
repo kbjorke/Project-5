@@ -26,6 +26,29 @@
  *                          function.
  *          - derivative2 : Used to find the second derivative of
  *                          the function.
+ *
+ * Example:
+ *
+ *   class funcxy: public Function
+ *   {
+ *       public:
+ *       funcxy(){}
+ *       double x,y;
+ *
+ *       double operator()(double *args)
+ *       {
+ *           x = variables[0];
+ *           y = variables[1];
+ *
+ *           return x*y;
+ *       }
+ *   };
+ *
+ *   funcxy func;
+ *   double args[2];
+ *
+ *   func(args);
+ *
  * */
 class Function
 {

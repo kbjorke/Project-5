@@ -169,7 +169,6 @@ double MonteCarlo::operator()(double lower, double upper,
         local_integral += term;
         local_variance += term*term;
     }
-    cout << local_integral << endl;
 
     MPI_Reduce(&local_integral, &integral, 1, MPI_DOUBLE, MPI_SUM,
                0, MPI_COMM_WORLD);

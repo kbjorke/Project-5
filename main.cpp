@@ -13,21 +13,8 @@
 
 using namespace std;
 
-class Func: public Function
-{
-    private:
-
-    public:
-    Func(int dimension) : Function(dimension){}
-    double operator()(double *args)
-    {
-        return args[0]*args[1]*args[1] + pow(args[2],3);
-    }
-};
-
 int main(int argc, char *argv[])
 {
-    /*
     double integral, upper, lower, variance, a;
     double energy, std, acceptance_rate, delta, alpha;
     double *R_init;
@@ -37,8 +24,6 @@ int main(int argc, char *argv[])
     bool VMC = false;
 
     double t0, t1, time;
-
-    //numprocs = 0;
 
     // Loop over commandline arguments to find parameters and options:
     for( i = 0; i < argc; i++ ){
@@ -80,15 +65,13 @@ int main(int argc, char *argv[])
         {
             if( i < 3 )
             {
-                    R_init[i] = -1;
+                    R_init[i] = 1.0;
             }
             else
             {
-                R_init[i] = 1;
+                R_init[i] = -1.0;
             }
         }
-        //R_init[0] = 1;
-        //R_init[3] = -1;
 
         delta = 0.6;
 
@@ -140,24 +123,16 @@ int main(int argc, char *argv[])
         integral = (*integrate)(lower, upper, N, &integrand);
         t1 = getUnixTime();
 
+
         if( string(method).find(string("MonteCarlo"))!=string(method).npos )
         {
             variance = (*integrate).get_variance();
             cout << variance << endl;
         }
 
+        time = t1-t0;
+
         cout << integral << endl;
-        cout << t1-t0 << endl;
+        cout << time << endl;
     }
-    */
-
-    double args[3];
-
-    args[0] = 1;
-    args[1] = 1;
-    args[2] = 1;
-
-    Func func(3);
-
-    cout << func.derivative2(args) << endl;
 }

@@ -5,8 +5,8 @@
 
 /* Class for implementation of Hamiltonian.
  *
- * Used as a superclass to create a sub-class which implement a
- * Hamiltonian to be used for Quantum Mechanical problems.
+ * Used create a callable object to represent the Hamiltonian
+ * to be used for Quantum Mechanical problems.
  *
  * Methods:
  *          - contructor     : Used to create Hamiltonian object.
@@ -26,7 +26,7 @@ public:
     double operator()(Function *psi, double *args);
     void set_potential(Function *V);
 
-    virtual ~Hamiltonian(){}
+    ~Hamiltonian(){}
 };
 
 #endif // HAMILTONIAN_H

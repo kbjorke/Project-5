@@ -14,6 +14,8 @@ private:
     Hamiltonian *H;
     Function *psi;
 
+    int numprocs, my_rank;
+
     double get_localenergy(double *R);
     void get_newpos(double *R, double *R_new);
     void accept_test(double *R, double *R_new);
@@ -26,6 +28,8 @@ public:
     double operator()(Function *trial_psi, double *var_params, int n_points);
     double get_std();
     double get_acceptance_rate();
+
+    ~VariationalMC(){}
 };
 
 #endif // VARIATIONALMC_H
