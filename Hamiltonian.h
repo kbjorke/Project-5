@@ -2,6 +2,7 @@
 #define HAMILTONIAN_H
 
 #include "Function.h"
+#include "Observable.h"
 
 /* Class for implementation of Hamiltonian.
  *
@@ -15,7 +16,7 @@
  *          - set_potential  : Used to set a external potential to the
  *                             Hamiltonian.
  * */
-class Hamiltonian
+class Hamiltonian : public Observable
 {
 protected:
     Function *V;
@@ -25,8 +26,6 @@ public:
 
     double operator()(Function *psi, double *args);
     void set_potential(Function *V);
-
-    ~Hamiltonian(){}
 };
 
 #endif // HAMILTONIAN_H
