@@ -3,14 +3,15 @@
 
 #include <iostream>
 
+#include "globals.h"
 #include "mpi.h"
-#include "VariationalMC.h"
+#include "MetropolisQM.h"
 #include "UnixTime.h"
 
 using namespace std;
 
 
-VariationalMC::VariationalMC(int dimension)
+MetropolisQM::MetropolisQM(int dimension)
 {
     this->dimension = dimension;
 
@@ -18,12 +19,12 @@ VariationalMC::VariationalMC(int dimension)
     R_new = new double[dimension];
 }
 
-void VariationalMC::initialize(Hamiltonian *H,
-                               double delta, double *R_init)
+void MetropolisQM::initialize(Function *psi,
+                              double delta, double *R_init)
 {
     int i;
 
-    this->H = H;
+    this->psi = psi;
     this->delta = delta;
 
     for( i = 0; i < dimension; i++ )
@@ -32,14 +33,12 @@ void VariationalMC::initialize(Hamiltonian *H,
     }
 }
 
-double VariationalMC::operator()(Function *trial_psi,
-                                 double *var_params, int n_points)
+double MetropolisQM::operator()(Observable *O, int n_points)
 {
-    int i, j; //, numprocs, my_rank;
+    int i, j;
     static double loc_en, local_energy, local_variance;
 
-    this->psi = trial_psi;
-    this->var_params = var_params;
+    this->O = O;
     this->N = n_points;
 
     local_energy = 0;
@@ -48,12 +47,6 @@ double VariationalMC::operator()(Function *trial_psi,
     energy = 0;
     variance = 0;
     accepts = 0;
-
-    (*psi).set_params(var_params);
-
-    MPI_Init(NULL, NULL);
-    MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
-    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
     set_seed(getUnixTime()*1000+my_rank);
 
@@ -64,15 +57,6 @@ double VariationalMC::operator()(Function *trial_psi,
 
         accept_test(R,R_new);
 
-        /*
-        for( k = 0; k < dimension; k++ )
-        {
-            cout << R[k] << " ";
-        }
-        cout << endl;
-        cout << get_localenergy(R) << endl;
-        */
-
         loc_en = get_localenergy(R);
         local_energy += loc_en;
         local_variance += loc_en*loc_en;
@@ -81,6 +65,8 @@ double VariationalMC::operator()(Function *trial_psi,
     MPI_Reduce(&local_energy, &energy, 1, MPI_DOUBLE, MPI_SUM,
            0, MPI_COMM_WORLD);
     MPI_Reduce(&local_variance, &variance, 1, MPI_DOUBLE, MPI_SUM,
+           0, MPI_COMM_WORLD);
+    MPI_Reduce(&accepts, &total_accepts, 1, MPI_DOUBLE, MPI_SUM,
            0, MPI_COMM_WORLD);
 
     if( my_rank == 0 )
@@ -91,27 +77,25 @@ double VariationalMC::operator()(Function *trial_psi,
 
         return mean_energy;
     }
-    MPI_Finalize();
-
 }
 
-double VariationalMC::get_std()
+double MetropolisQM::get_std()
 {
     return std_energy;
 }
 
-double VariationalMC::get_acceptance_rate()
+double MetropolisQM::get_acceptance_rate()
 {
-    return (double) accepts/(N);
+    return (double) total_accepts/(N);
 }
 
 
-double VariationalMC::get_localenergy(double *R)
+double MetropolisQM::get_localenergy(double *R)
 {
-    return (*H)(psi, R) / (*psi)(R);
+    return (*O)(psi, R) / (*psi)(R);
 }
 
-void VariationalMC::get_newpos(double *R, double *R_new)
+void MetropolisQM::get_newpos(double *R, double *R_new)
 {
     static int i;
     static double random_num;
@@ -123,7 +107,7 @@ void VariationalMC::get_newpos(double *R, double *R_new)
     }
 }
 
-void VariationalMC::accept_test(double *R, double *R_new)
+void MetropolisQM::accept_test(double *R, double *R_new)
 {
     static int i;
     static double rel_prob, random_num;
@@ -151,13 +135,13 @@ void VariationalMC::accept_test(double *R, double *R_new)
     }
 }
 
-double VariationalMC::relative_probability(double *R, double *R_new)
+double MetropolisQM::relative_probability(double *R, double *R_new)
 {
     return ( (*psi)(R_new)*(*psi)(R_new) ) /
             ( (*psi)(R)*(*psi)(R) );
 }
 
-void VariationalMC::set_seed(double seed)
+void MetropolisQM::set_seed(double seed)
 {
     srand(seed);
 }

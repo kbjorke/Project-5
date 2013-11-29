@@ -1,20 +1,18 @@
-#ifndef VARIATIONALMC_H
-#define VARIATIONALMC_H
+#ifndef METROPOLISQM_H
+#define METROPOLISQM_H
 
 #include "Function.h"
-#include "Hamiltonian.h"
+#include "Observable.h"
 
-class VariationalMC
+class MetropolisQM
 {
 private:
-    int dimension, accepts, N, thermalization;
+    int dimension, accepts, N, total_accepts;
     double delta, mean_energy, std_energy;
     double energy, variance;
     double *var_params, *R, *R_new;
-    Hamiltonian *H;
+    Observable *O;
     Function *psi;
-
-    int numprocs, my_rank;
 
     double get_localenergy(double *R);
     void get_newpos(double *R, double *R_new);
@@ -23,13 +21,13 @@ private:
     void set_seed(double seed);
 
 public:
-    VariationalMC(int dimension);
-    void initialize(Hamiltonian *H, double delta, double *R_init);
-    double operator()(Function *trial_psi, double *var_params, int n_points);
+    MetropolisQM(int dimension);
+    void initialize(Function *psi, double delta, double *R_init);
+    double operator()(Observable *O, int n_points);
     double get_std();
     double get_acceptance_rate();
 
-    ~VariationalMC(){}
+    ~MetropolisQM(){}
 };
 
-#endif // VARIATIONALMC_H
+#endif // METROPOLISQM_H
