@@ -24,7 +24,8 @@ SOURCES += main.cpp \
     UnixTime.cpp \
     problem_definitions.cpp \
     output_functions.cpp \
-    VariationalMC.cpp
+    VariationalMC.cpp \
+    globals.cpp
 
 HEADERS += \
     Function.h \
@@ -36,6 +37,7 @@ HEADERS += \
     UnixTime.h \
     problem_definitions.h \
     output_functions.h \
-    VariationalMC.h
+    VariationalMC.h \
+    globals.h
 
 LIBS += -lrt
