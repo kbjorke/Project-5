@@ -1,7 +1,8 @@
 #include <cmath>
 #include <cstdlib>
-#include <mpi.h>
 
+#include "globals.h"
+#include "mpi.h"
 #include "Integral.h"
 #include "Function.h"
 #include "lib.h"
@@ -40,10 +41,6 @@ double GaussQuad::operator()(double lower, double upper,
     int i;
     double final_integral;
 
-    int numprocs, my_rank;
-    int argc;
-    char **argv;
-
     args = new double[dimension];
 
     x = new double[n_points];
@@ -57,10 +54,6 @@ double GaussQuad::operator()(double lower, double upper,
 
     integral = 0;
     final_integral = 0;
-
-    MPI_Init(&argc, &argv);
-    MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
-    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
     for( i = my_rank; i < n_points; i += numprocs )
     {
@@ -76,8 +69,6 @@ double GaussQuad::operator()(double lower, double upper,
     {
         return final_integral;
     }
-
-    MPI_Finalize();
 }
 
 
@@ -143,10 +134,6 @@ double MonteCarlo::operator()(double lower, double upper,
     int i;
     double local_integral, local_variance;
 
-    int numprocs, my_rank;
-    int argc;
-    char **argv;
-
     args = new double[dimension];
     func = f;
 
@@ -156,10 +143,6 @@ double MonteCarlo::operator()(double lower, double upper,
     local_variance = 0;
 
     constant = constant_term(lower, upper);
-
-    MPI_Init(&argc, &argv);
-    MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
-    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
     set_seed(getUnixTime()*100+my_rank);
 
@@ -186,7 +169,7 @@ double MonteCarlo::operator()(double lower, double upper,
         return integral;
     }
 
-    MPI_Finalize();
+    //MPI_Finalize();
 }
 
 double MonteCarlo::get_variance()

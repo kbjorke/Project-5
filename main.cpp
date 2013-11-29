@@ -3,6 +3,8 @@
 #include <cstdlib>
 #include <cmath>
 
+#include "globals.h"
+#include "mpi.h"
 #include "Function.h"
 #include "Integral.h"
 #include "Hamiltonian.h"
@@ -47,6 +49,9 @@ int main(int argc, char *argv[])
         }
     }
 
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
     if( integrators_test )
     {
@@ -119,8 +124,13 @@ int main(int argc, char *argv[])
             integrate = new MonteCarloIS(6);
         }
 
+        if( my_rank == 0 )
+        {
         t0 = getUnixTime();
+        }
         integral = (*integrate)(lower, upper, N, &integrand);
+        if( my_rank == 0 )
+        {
         t1 = getUnixTime();
 
 
@@ -134,5 +144,8 @@ int main(int argc, char *argv[])
 
         cout << integral << endl;
         cout << time << endl;
+        }
     }
+
+    MPI_Finalize();
 }
