@@ -144,7 +144,7 @@ double MonteCarlo::operator()(double lower, double upper,
 
     constant = constant_term(lower, upper);
 
-    set_seed(getUnixTime()*100+my_rank);
+    set_seed((int) getUnixTime()*100+my_rank);
 
     for( i = my_rank; i < n_points; i += numprocs )
     {
@@ -197,16 +197,18 @@ double MonteCarloBF::new_term(double lower, double upper)
 
     for( dim = 0; dim < dimension; dim++ )
     {
-        random_num = (double)rand() /  RAND_MAX;
+        random_num = ran2(&idum);
+        //random_num = (double)rand() /  RAND_MAX;
         args[dim] = lower + random_num*(upper - lower);
     }
 
     return (*func)(args);
 }
 
-void MonteCarloBF::set_seed(double seed)
+void MonteCarloBF::set_seed(int seed)
 {
-    srand(seed);
+    idum = -seed;
+    //srand(seed);
 }
 
 
@@ -233,7 +235,7 @@ double MonteCarloIS::new_term(double lower, double upper)
     return (*func)(args)*exp(mu);
 }
 
-void MonteCarloIS::set_seed(double seed)
+void MonteCarloIS::set_seed(int seed)
 {
     idum = -seed;
 }

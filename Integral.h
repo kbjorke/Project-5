@@ -87,17 +87,19 @@ class MonteCarlo: public Integral
         double operator()(double lower, double upper,
                           int n_points, Function *f);
         double get_variance();
-        virtual void set_seed(double seed){}
+        virtual void set_seed(int seed){}
 };
 
 
 class MonteCarloBF: public MonteCarlo
 {
+    private:
+        long int idum;
     public:
         MonteCarloBF(int dimension);
         double constant_term(double upper, double lower);
         double new_term(double lower, double upper);
-        void set_seed(double seed);
+        void set_seed(int seed);
 };
 
 
@@ -109,7 +111,7 @@ class MonteCarloIS: public MonteCarlo
         MonteCarloIS(int dimension);
         double constant_term(double upper, double lower);
         double new_term(double upper, double lower);
-        void set_seed(double seed);
+        void set_seed(int seed);
 };
 
 #endif // INTEGRAL_H
