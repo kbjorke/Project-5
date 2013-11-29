@@ -20,7 +20,6 @@ private:
     void get_newpos(double *R, double *R_new);
     void accept_test(double *R, double *R_new);
     double relative_probability(double *R, double *R_new);
-    void set_seed(int seed);
 
 public:
     MetropolisQM(int dimension);
@@ -28,6 +27,7 @@ public:
     double operator()(Observable *O, int n_points);
     double get_std();
     double get_acceptance_rate();
+    void set_seed(long int seed);
     void set_thermalization(int thermalization);
 
     ~MetropolisQM(){}
