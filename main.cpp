@@ -21,9 +21,10 @@ int main(int argc, char *argv[])
     double energy, std, acceptance_rate, delta, alpha;
     double *R_init;
     int i, N;
-    char *method;
+    char *method, *trial_psi;
     bool integrators_test = false;
     bool VMC = false;
+    bool nointeract = false;
 
     double t0, t1, time;
 
@@ -31,6 +32,9 @@ int main(int argc, char *argv[])
     for( i = 0; i < argc; i++ ){
         if( strcmp(argv[i], "-method") == 0 ){
             method = argv[i+1];
+        }
+        if( strcmp(argv[i], "-trial") == 0 ){
+            trial_psi = argv[i+1];
         }
         if( strcmp(argv[i], "-lower") == 0 ){
             lower = atof(argv[i+1]);
@@ -47,6 +51,9 @@ int main(int argc, char *argv[])
         if( strcmp(argv[i], "-VMC") == 0 ){
             VMC = true;
         }
+        if( strcmp(argv[i], "-nointeract") == 0 ){
+            nointeract = true;
+        }
     }
 
     MPI_Init(&argc, &argv);
@@ -60,12 +67,32 @@ int main(int argc, char *argv[])
 
     else if( VMC )
     {
-        V_HO potential(6);
-        Observable *H_HO;
+        Function *psi_trial;
 
-        H_HO = new Hamiltonian();
+        if( strcmp(trial_psi, "T1") == 0 ){
+            psi_trial = new Psi_T1(6);
+        }
+        if( strcmp(trial_psi, "T2") == 0 ){
+            psi_trial = new Psi_T1(6);
+        }
 
-        (*H_HO).set_potential(&potential);
+        Function *potential;
+
+        if( nointeract )
+        {
+            potential = new V_HO(6);
+        }
+        else
+        {
+            potential = new V_TOT(6);
+        }
+
+
+        Observable *hamiltonian;
+
+        hamiltonian = new Hamiltonian();
+
+        (*hamiltonian).set_potential(potential);
 
         R_init = new double[6];
         for( i = 0; i < 6; i++ )
@@ -82,16 +109,14 @@ int main(int argc, char *argv[])
 
         delta = 0.6;
 
-        Function *psi_t1;
-        psi_t1 = new Psi_T1(6);
 
         alpha = 1;
 
-        (*psi_t1).set_params(&alpha);
+        (*psi_trial).set_params(&alpha);
 
         MetropolisQM metroQM(6);
 
-        metroQM.initialize(psi_t1, delta, R_init);
+        metroQM.initialize(psi_trial, delta, R_init);
 
 
         if( my_rank == 0 )
@@ -99,7 +124,7 @@ int main(int argc, char *argv[])
             t0 = getUnixTime();
         }
 
-        energy = metroQM(H_HO, N);
+        energy = metroQM(hamiltonian, N);
 
         if( my_rank == 0 )
         {
