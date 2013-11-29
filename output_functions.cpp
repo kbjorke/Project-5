@@ -6,6 +6,8 @@
 
 #include <iostream>
 
+#include "globals.h"
+#include "mpi.h"
 #include "output_functions.h"
 #include "problem_definitions.h"
 #include "Integral.h"
@@ -65,9 +67,6 @@ void output_method(string method)
     long int N;
     double a, lower, upper, integral, variance, t0, t1, time;
 
-    string output_file;
-    ostringstream oss;
-
     Integral *integrate;
     Integrand integrand(6);
     a = 1;
@@ -77,12 +76,20 @@ void output_method(string method)
     upper = 4;
 
     // Generate filename for output file
-    oss << "output_" << method  << ".txt";
-
-    output_file = oss.str();
 
     fstream outfile;
-    outfile.open(output_file.c_str(), ios::out);
+
+    if( my_rank == 0 )
+    {
+        string output_file;
+        ostringstream oss;
+
+        oss << "output_" << method  << "_np" << numprocs << ".txt";
+
+        output_file = oss.str();
+
+        outfile.open(output_file.c_str(), ios::out);
+    }
 
     if( method.find("Gauss")!=method.npos )
     {
@@ -95,25 +102,38 @@ void output_method(string method)
             integrate = new GaussHermite(6);
         }
 
-        outfile << "Method: " << method << endl;
-        outfile << "N" << '\t' << "N*dim" << '\t' << "Integral-value" << '\t' <<
-                   "Time" << endl;
-
-        cout << method << endl;
-        outfile.precision(10);
-        for( N = 6; N <= 60; N += 6 )
+        if( my_rank == 0)
         {
-            cout << N << endl;
-            t0 = getUnixTime();
+            outfile << "Method: " << method << '\t' <<
+                       "Processors: " << numprocs << endl;
+            outfile << "N" << '\t' << "N*dim" << '\t' << "Integral-value" << '\t' <<
+                       "Time" << endl;
+
+            cout << method << endl;
+            outfile.precision(10);
+        }
+
+        for( N = 6; N <= 20; N += 6 )
+        {
+            if( my_rank == 0 )
+            {
+                cout << N << endl;
+                t0 = getUnixTime();
+            }
+
             integral = (*integrate)(lower, upper, N, &integrand);
-            t1 = getUnixTime();
 
-            time = t1-t0;
+            if( my_rank == 0 )
+            {
+                t1 = getUnixTime();
 
-            outfile << setw(2) << setfill(' ') << N << '\t' <<
-                       setw(11) << setfill(' ') << pow(N,6) << '\t' <<
-                       integral << '\t' <<
-                       time << endl;
+                time = t1-t0;
+
+                outfile << setw(2) << setfill(' ') << N << '\t' <<
+                           setw(11) << setfill(' ') << pow(N,6) << '\t' <<
+                           integral << '\t' <<
+                           time << endl;
+            }
         }
 
     }
@@ -128,32 +148,48 @@ void output_method(string method)
             integrate = new MonteCarloIS(6);
         }
 
-        outfile << "Method: " << method << endl;
-        outfile << '\t' <<
-                   "N" << '\t' << "Integral-value" << '\t' <<
-                   "Variance" << '\t' << "Time" << endl;
-
-        cout << method << endl;
-        outfile.precision(10);
-        for( N = 100; N <= 1e10; N *= 10 )
+        if( my_rank == 0 )
         {
-            cout << N << endl;
-            t0 = getUnixTime();
+            outfile << "Method: " << method << '\t' <<
+                       "Processors: " << numprocs << endl;
+            outfile << '\t' <<
+                       "N" << '\t' << "Integral-value" << '\t' <<
+                       "Variance" << '\t' << "Time" << endl;
+
+            cout << method << endl;
+            outfile.precision(10);
+        }
+
+        for( N = 100; N <= 1e5; N *= 10 )
+        {
+            if( my_rank == 0 )
+            {
+                cout << N << endl;
+                t0 = getUnixTime();
+            }
+
             integral = (*integrate)(lower, upper, N, &integrand);
-            t1 = getUnixTime();
 
-            time = t1-t0;
+            if( my_rank == 0 )
+            {
+                t1 = getUnixTime();
 
-            variance = (*integrate).get_variance();
+                time = t1-t0;
 
-            outfile << setw(11) << setfill(' ') << N << '\t' <<
-                       integral << '\t' <<
-                       variance << '\t' <<
-                       time << endl;
+                variance = (*integrate).get_variance();
+
+                outfile << setw(11) << setfill(' ') << N << '\t' <<
+                           integral << '\t' <<
+                           variance << '\t' <<
+                           time << endl;
+            }
         }
     }
 
-    outfile.close();
+    if( my_rank == 0 )
+    {
+        outfile.close();
+    }
 }
 
 
