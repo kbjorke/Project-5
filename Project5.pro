@@ -24,8 +24,8 @@ SOURCES += main.cpp \
     UnixTime.cpp \
     problem_definitions.cpp \
     output_functions.cpp \
-    VariationalMC.cpp \
-    globals.cpp
+    globals.cpp \
+    MetropolisQM.cpp
 
 HEADERS += \
     Function.h \
@@ -37,7 +37,8 @@ HEADERS += \
     UnixTime.h \
     problem_definitions.h \
     output_functions.h \
-    VariationalMC.h \
-    globals.h
+    globals.h \
+    MetropolisQM.h \
+    Observable.h
 
 LIBS += -lrt
