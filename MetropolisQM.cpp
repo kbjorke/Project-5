@@ -87,6 +87,10 @@ double MetropolisQM::operator()(Observable *O, int n_points)
 
         return mean_energy;
     }
+    else
+    {
+        return 0;
+    }
 }
 
 double MetropolisQM::get_std()

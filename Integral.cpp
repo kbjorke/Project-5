@@ -66,9 +66,14 @@ double GaussQuad::operator()(double lower, double upper,
     MPI_Reduce(&integral, &final_integral, 1, MPI_DOUBLE, MPI_SUM,
                0, MPI_COMM_WORLD);
 
+
     if( my_rank == 0 )
     {
         return final_integral;
+    }
+    else
+    {
+        return 0;
     }
 
     delete[] x;
@@ -167,6 +172,10 @@ double MonteCarlo::operator()(double lower, double upper,
         variance = constant*sqrt(variance/((double) n_points));
 
         return integral;
+    }
+    else
+    {
+        return 0;
     }
 }
 
