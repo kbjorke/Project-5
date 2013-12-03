@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <cmath>
 #include <string>
+#include <ctime>
 
 #include <iostream>
 
@@ -27,18 +28,20 @@ void test_integrators()
     methods[2] = "MonteCarloBF";
     methods[3] = "MonteCarloIS";
 
-    //output_method(methods[3]);
+    output_method(methods[3]);
+    /*
     for( i = 2; i < 4; i++ )
     {
         output_method(methods[i]);
     }
+    */
 }
 
 void output_method(string method)
 {
     int i, j;
     long int N;
-    double a, lower, upper, integral, variance, t0, t1, time;
+    double a, lower, upper, integral, variance, t0, t1, delta_t;
 
     Integral *integrate;
     Integrand integrand(6);
@@ -101,12 +104,12 @@ void output_method(string method)
             {
                 t1 = getUnixTime();
 
-                time = t1-t0;
+                delta_t = t1-t0;
 
                 outfile << setw(2) << setfill(' ') << N << '\t' <<
                            setw(11) << setfill(' ') << pow(N,6) << '\t' <<
                            integral << '\t' <<
-                           time << endl;
+                           delta_t << endl;
             }
 
             MPI_Barrier(MPI_COMM_WORLD);
@@ -150,7 +153,7 @@ void output_method(string method)
             {
                 t1 = getUnixTime();
 
-                time = t1-t0;
+                delta_t = t1-t0;
 
                 variance = (*integrate).get_variance();
 
@@ -171,19 +174,73 @@ void output_method(string method)
 }
 
 double variational_MC(Function *psi_trial, Observable *hamiltonian,
-                      double *R_init, double *params,
+                      double *R_init, double *params, int num_params,
                       double *var_params, int ind_var, int num_var,
-                      double *best_var, string *id_params)
+                      double *best_var, string *id_params, int N)
 {
-    int i, N;
-    double delta, std, t0, t1, time, acceptance_rate;
+    int i, ind_best;
+    double delta, std, t0, t1, delta_t, acceptance_rate;
     double energy, best_energy;
+
+    fstream outfile;
+
+    if( my_rank == 0 )
+    {
+        string output_file;
+        ostringstream oss;
+
+        char datetime[80];
+
+        time_t rawtime;
+        tm* timeinfo;
+
+        time(&rawtime);
+        timeinfo = localtime(&rawtime);
+
+        strftime(datetime, 80, "%F-%H%M", timeinfo);
+
+        oss << "output_VMC_" << "_np" << numprocs << "_" <<
+               datetime << ".txt";
+
+        output_file = oss.str();
+
+        outfile.open(output_file.c_str(), ios::out);
+
+        outfile << "QM Variational Monte Carlo: " << endl;
+        outfile << "Processors: " << numprocs << '\t' <<
+                   "N: " << N << endl;
+        outfile << "Variational parameter: " << id_params[ind_var] << endl;
+        outfile << "Non-variational parameters: " << endl;
+
+        if( num_params != 1 )
+        {
+            for( i = 0; i < num_params; i++ )
+            {
+                if( i != ind_var )
+                {
+                    outfile << id_params[i] << ": " << params[i] << '\t';
+                }
+            }
+        }
+        else
+        {
+            outfile << "No non-variational parameters.";
+        }
+
+        outfile << endl << setw(20) << setfill('-') << " " << endl;
+
+        outfile << id_params[ind_var] << '\t' <<
+                   "Energy" << '\t' <<
+                   "Standard deviance" << '\t' <<
+                   "Acceptance rate" << '\t' <<
+                   "Time" << endl;
+
+        outfile.precision(10);
+    }
 
     MetropolisQM metroQM(6);
 
     delta = 0.6;
-
-    N = 100;
 
     best_energy = 1e10;
 
@@ -208,18 +265,41 @@ double variational_MC(Function *psi_trial, Observable *hamiltonian,
 
             std = metroQM.get_std();
             acceptance_rate = metroQM.get_acceptance_rate();
-            time = t1 - t0;
+            delta_t = t1 - t0;
 
-            cout << energy << endl;
-            cout << std << endl;
-            cout << acceptance_rate << endl;
-            cout << time << endl;
+            outfile << params[ind_var] << '\t' <<
+                       energy << '\t' <<
+                       std << '\t' <<
+                       acceptance_rate << '\t' <<
+                       delta_t << endl;
+
+            if( energy < best_energy )
+            {
+                best_energy = energy;
+                ind_best = ind_var;
+                *best_var = params[ind_var];
+            }
         }
 
         MPI_Barrier(MPI_COMM_WORLD);
     }
 
-    return 0;
+    if( my_rank == 0 )
+    {
+        outfile << setw(20) << setfill('-') << " " << endl;
+        outfile << "Best energy: " << best_energy << '\t' <<
+                   " with " << id_params[ind_best] <<
+                   " = " << *best_var << endl;
+
+        outfile.close();
+    }
+
+    return best_energy;
+}
+
+void output_VMC_data_header()
+{
+
 }
 
 void output_VMC_data()
