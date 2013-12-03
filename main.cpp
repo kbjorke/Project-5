@@ -3,12 +3,11 @@
 #include <cstdlib>
 #include <cmath>
 
-#include "globals.h"
 #include "mpi.h"
+#include "globals.h"
 #include "Function.h"
 #include "Integral.h"
 #include "Hamiltonian.h"
-#include "MetropolisQM.h"
 #include "UnixTime.h"
 #include "problem_definitions.h"
 #include "output_functions.h"
@@ -19,7 +18,7 @@ int main(int argc, char *argv[])
 {
     double integral, upper, lower, variance, a;
     double energy, std, acceptance_rate, delta, alpha;
-    double *R_init;
+    double *R_init, *params;
     int i, N;
     char *method, *trial_psi;
     bool solve_integral = false;
@@ -90,7 +89,9 @@ int main(int argc, char *argv[])
         {
             t0 = getUnixTime();
         }
+
         integral = (*integrate)(lower, upper, N, &integrand);
+
         if( my_rank == 0 )
         {
             t1 = getUnixTime();
@@ -120,9 +121,13 @@ int main(int argc, char *argv[])
 
         if( strcmp(trial_psi, "T1") == 0 ){
             psi_trial = new Psi_T1(6);
+
+            params = new double[1];
+
+            *params = 1;
         }
         if( strcmp(trial_psi, "T2") == 0 ){
-            psi_trial = new Psi_T1(6);
+            psi_trial = new Psi_T2(6);
         }
 
         Function *potential;
@@ -156,37 +161,20 @@ int main(int argc, char *argv[])
             }
         }
 
-        delta = 0.6;
 
-        alpha = 1;
-
-        (*psi_trial).set_params(&alpha);
-
-        MetropolisQM metroQM(6);
-
-        metroQM.initialize(psi_trial, delta, R_init);
-
-
-        if( my_rank == 0 )
+        double var_params[10];
+        for( i = 0; i < 10; i++ )
         {
-            t0 = getUnixTime();
+            var_params[i] = 0.5 + i*0.1;
         }
+        int ind_var = 0;
+        double best_var;
+        string id_params[1];
+        id_params[0] = "alpha";
 
-        energy = metroQM(hamiltonian, N);
-
-        if( my_rank == 0 )
-        {
-            t1 = getUnixTime();
-
-            std = metroQM.get_std();
-            acceptance_rate = metroQM.get_acceptance_rate();
-            time = t1 - t0;
-
-            cout << energy << endl;
-            cout << std << endl;
-            cout << acceptance_rate << endl;
-            cout << time << endl;
-        }
+        energy = variational_MC(psi_trial, hamiltonian, R_init,
+                                params, 1, var_params, ind_var,
+                                10, &best_var, id_params, N);
     }
 
     MPI_Finalize();
