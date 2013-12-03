@@ -6,43 +6,16 @@
 
 #include <iostream>
 
-#include "globals.h"
 #include "mpi.h"
+#include "globals.h"
 #include "output_functions.h"
 #include "problem_definitions.h"
 #include "Integral.h"
+#include "MetropolisQM.h"
 #include "UnixTime.h"
 
 using namespace std;
 
-/* Function that writes solution to file.
- *
- * Input:
- *
- *			- n: amount of points to describe position
- *
- *			- m: amount of point to describe time
- *
- *			- T: final time of solution
- *
- *			- d: largest positions
- *
- *			- delta_t: time step
- *
- *			- delta_x: spatial step
- *
- *			- alpha: alpha value for solution, given by delta_t/delta_x^2
- *
- *			- *method: name of methods used for solution
- *
- * 			- **u: n x m - matrix containing solution
- *
- *
- * Output:
- *
- *			- Filename: data_<method>_n<n>_T<T>_alpha<alpha>.txt
- *
- * */
 void test_integrators()
 {
     int i, j;
@@ -54,8 +27,8 @@ void test_integrators()
     methods[2] = "MonteCarloBF";
     methods[3] = "MonteCarloIS";
 
-    //output_method(methods[2]);
-    for( i = 0; i < 4; i++ )
+    //output_method(methods[3]);
+    for( i = 2; i < 4; i++ )
     {
         output_method(methods[i]);
     }
@@ -106,14 +79,15 @@ void output_method(string method)
         {
             outfile << "Method: " << method << '\t' <<
                        "Processors: " << numprocs << endl;
-            outfile << "N" << '\t' << "N*dim" << '\t' << "Integral-value" << '\t' <<
+            outfile << "N" << '\t' << "N*dim" << '\t' <<
+                       "Integral-value" << '\t' <<
                        "Time" << endl;
 
             cout << method << endl;
             outfile.precision(10);
         }
 
-        for( N = 6; N <= 20; N += 6 )
+        for( N = 6; N <= 60; N += 6 )
         {
             if( my_rank == 0 )
             {
@@ -134,6 +108,8 @@ void output_method(string method)
                            integral << '\t' <<
                            time << endl;
             }
+
+            MPI_Barrier(MPI_COMM_WORLD);
         }
 
     }
@@ -160,7 +136,7 @@ void output_method(string method)
             outfile.precision(10);
         }
 
-        for( N = 100; N <= 1e5; N *= 10 )
+        for( N = 100; N <= 1e10; N *= 10 )
         {
             if( my_rank == 0 )
             {
@@ -183,6 +159,8 @@ void output_method(string method)
                            variance << '\t' <<
                            time << endl;
             }
+
+            MPI_Barrier(MPI_COMM_WORLD);
         }
     }
 
@@ -192,4 +170,59 @@ void output_method(string method)
     }
 }
 
+double variational_MC(Function *psi_trial, Observable *hamiltonian,
+                      double *R_init, double *params,
+                      double *var_params, int ind_var, int num_var,
+                      double *best_var, string *id_params)
+{
+    int i, N;
+    double delta, std, t0, t1, time, acceptance_rate;
+    double energy, best_energy;
 
+    MetropolisQM metroQM(6);
+
+    delta = 0.6;
+
+    N = 100;
+
+    best_energy = 1e10;
+
+    for( i = 0; i < num_var; i++ )
+    {
+        params[ind_var] = var_params[i];
+
+        (*psi_trial).set_params(params);
+
+        metroQM.initialize(psi_trial, delta, R_init);
+
+        if( my_rank == 0 )
+        {
+            t0 = getUnixTime();
+        }
+
+        energy = metroQM(hamiltonian, N);
+
+        if( my_rank == 0 )
+        {
+            t1 = getUnixTime();
+
+            std = metroQM.get_std();
+            acceptance_rate = metroQM.get_acceptance_rate();
+            time = t1 - t0;
+
+            cout << energy << endl;
+            cout << std << endl;
+            cout << acceptance_rate << endl;
+            cout << time << endl;
+        }
+
+        MPI_Barrier(MPI_COMM_WORLD);
+    }
+
+    return 0;
+}
+
+void output_VMC_data()
+{
+
+}
