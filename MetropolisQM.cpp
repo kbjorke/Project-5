@@ -38,6 +38,7 @@ void MetropolisQM::initialize(Function *psi,
 
 double MetropolisQM::operator()(Observable *O, int n_points)
 {
+    static long int time_int;
     static int i, therm;
     static double loc_en, local_energy, local_variance;
 
@@ -51,7 +52,9 @@ double MetropolisQM::operator()(Observable *O, int n_points)
     variance = 0;
     accepts = 0;
 
-    set_seed((long int) (getUnixTime()*100 + my_rank));
+    time_int = (long int) (getUnixTime()*10000 + my_rank);
+
+    set_seed(time_int);
 
     therm = thermalization;
 
@@ -159,7 +162,10 @@ double MetropolisQM::relative_probability(double *R, double *R_new)
 
 void MetropolisQM::set_seed(long int seed)
 {
-    idum = -seed;
+    static long int seed_;
+
+    seed_ = seed - ((long int) seed/(int) 1e7)*(int) 1e7;
+    idum = -seed_;
     //srand(seed);
 }
 

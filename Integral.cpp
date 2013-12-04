@@ -137,6 +137,7 @@ MonteCarlo::MonteCarlo(int dimension) : Integral(dimension){}
 double MonteCarlo::operator()(double lower, double upper,
                                 int n_points, Function *f)
 {
+    static long int time_int;
     int i;
     double local_integral, local_variance;
 
@@ -149,7 +150,9 @@ double MonteCarlo::operator()(double lower, double upper,
 
     constant = constant_term(lower, upper);
 
-    set_seed((long int) (getUnixTime()*100 + my_rank));
+    time_int = (long int) (getUnixTime()*10000 + my_rank);
+
+    set_seed(time_int);
 
     for( i = my_rank; i < n_points; i += numprocs )
     {
@@ -216,7 +219,10 @@ double MonteCarloBF::new_term(double lower, double upper)
 
 void MonteCarloBF::set_seed(long int seed)
 {
-    idum = -seed;
+    static long int seed_;
+
+    seed_ = seed - ((long int) seed/(int) 1e7)*(int) 1e7;
+    idum = -seed_;
     //srand(seed);
 }
 
@@ -246,5 +252,8 @@ double MonteCarloIS::new_term(double lower, double upper)
 
 void MonteCarloIS::set_seed(long int seed)
 {
-    idum = -seed;
+    static long int seed_;
+
+    seed_ = seed - ((long int) seed/(int) 1e7)*(int) 1e7;
+    idum = -seed_;
 }
