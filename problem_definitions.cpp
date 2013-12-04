@@ -2,6 +2,10 @@
 
 #include "problem_definitions.h"
 
+#include <iostream>
+
+using namespace std;
+
 
 Integrand::Integrand(int dimension) : Function(dimension){}
 

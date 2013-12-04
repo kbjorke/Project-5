@@ -25,7 +25,8 @@ SOURCES += main.cpp \
     problem_definitions.cpp \
     output_functions.cpp \
     globals.cpp \
-    MetropolisQM.cpp
+    MetropolisQM.cpp \
+    variational_MC.cpp
 
 HEADERS += \
     Function.h \
@@ -39,6 +40,7 @@ HEADERS += \
     output_functions.h \
     globals.h \
     MetropolisQM.h \
-    Observable.h
+    Observable.h \
+    variational_MC.h
 
 LIBS += -lrt

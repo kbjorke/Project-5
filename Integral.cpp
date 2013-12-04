@@ -1,8 +1,8 @@
 #include <cmath>
 #include <cstdlib>
 
-#include "globals.h"
 #include "mpi.h"
+#include "globals.h"
 #include "Integral.h"
 #include "Function.h"
 #include "lib.h"
