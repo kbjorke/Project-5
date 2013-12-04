@@ -173,136 +173,84 @@ void output_method(string method)
     }
 }
 
-double variational_MC(Function *psi_trial, Observable *hamiltonian,
-                      double *R_init, double *params, int num_params,
-                      double *var_params, int ind_var, int num_var,
-                      double *best_var, string *id_params, int N)
+void output_VMC_data_header(fstream *outfile, int N, int ind_var,
+                            double *params, int num_params,
+                            string *id_params)
 {
-    int i, ind_best;
-    double delta, std, t0, t1, delta_t, acceptance_rate;
-    double energy, best_energy;
+    static int i;
 
-    fstream outfile;
+    string output_file;
+    ostringstream oss;
 
-    if( my_rank == 0 )
+    char datetime[80];
+
+    time_t rawtime;
+    tm* timeinfo;
+
+    time(&rawtime);
+    timeinfo = localtime(&rawtime);
+
+    strftime(datetime, 80, "%F-%H%M", timeinfo);
+
+    oss << "output_VMC_" << "_np" << numprocs << "_" <<
+           datetime << ".txt";
+
+    output_file = oss.str();
+
+    (*outfile).open(output_file.c_str(), ios::out);
+
+    (*outfile) << "QM Variational Monte Carlo: " << endl;
+    (*outfile) << "Processors: " << numprocs << '\t' <<
+                  "N: " << N << endl;
+    (*outfile) << "Variational parameter: " << id_params[ind_var] << endl;
+    (*outfile) << "Non-variational parameters: " << endl;
+
+    if( num_params != 1 )
     {
-        string output_file;
-        ostringstream oss;
-
-        char datetime[80];
-
-        time_t rawtime;
-        tm* timeinfo;
-
-        time(&rawtime);
-        timeinfo = localtime(&rawtime);
-
-        strftime(datetime, 80, "%F-%H%M", timeinfo);
-
-        oss << "output_VMC_" << "_np" << numprocs << "_" <<
-               datetime << ".txt";
-
-        output_file = oss.str();
-
-        outfile.open(output_file.c_str(), ios::out);
-
-        outfile << "QM Variational Monte Carlo: " << endl;
-        outfile << "Processors: " << numprocs << '\t' <<
-                   "N: " << N << endl;
-        outfile << "Variational parameter: " << id_params[ind_var] << endl;
-        outfile << "Non-variational parameters: " << endl;
-
-        if( num_params != 1 )
+        for( i = 0; i < num_params; i++ )
         {
-            for( i = 0; i < num_params; i++ )
+            if( i != ind_var )
             {
-                if( i != ind_var )
-                {
-                    outfile << id_params[i] << ": " << params[i] << '\t';
-                }
+                (*outfile) << id_params[i] << " = " <<
+                              params[i] << " ," <<'\t';
             }
         }
-        else
-        {
-            outfile << "No non-variational parameters.";
-        }
-
-        outfile << endl << setw(20) << setfill('-') << " " << endl;
-
-        outfile << id_params[ind_var] << '\t' <<
-                   "Energy" << '\t' <<
-                   "Standard deviance" << '\t' <<
-                   "Acceptance rate" << '\t' <<
-                   "Time" << endl;
-
-        outfile.precision(10);
     }
-
-    MetropolisQM metroQM(6);
-
-    delta = 0.6;
-
-    best_energy = 1e10;
-
-    for( i = 0; i < num_var; i++ )
+    else
     {
-        params[ind_var] = var_params[i];
-
-        (*psi_trial).set_params(params);
-
-        metroQM.initialize(psi_trial, delta, R_init);
-
-        if( my_rank == 0 )
-        {
-            t0 = getUnixTime();
-        }
-
-        energy = metroQM(hamiltonian, N);
-
-        if( my_rank == 0 )
-        {
-            t1 = getUnixTime();
-
-            std = metroQM.get_std();
-            acceptance_rate = metroQM.get_acceptance_rate();
-            delta_t = t1 - t0;
-
-            outfile << params[ind_var] << '\t' <<
-                       energy << '\t' <<
-                       std << '\t' <<
-                       acceptance_rate << '\t' <<
-                       delta_t << endl;
-
-            if( energy < best_energy )
-            {
-                best_energy = energy;
-                ind_best = ind_var;
-                *best_var = params[ind_var];
-            }
-        }
-
-        MPI_Barrier(MPI_COMM_WORLD);
+        (*outfile) << "No non-variational parameters.";
     }
 
-    if( my_rank == 0 )
-    {
-        outfile << setw(20) << setfill('-') << " " << endl;
-        outfile << "Best energy: " << best_energy << '\t' <<
-                   " with " << id_params[ind_best] <<
-                   " = " << *best_var << endl;
+    (*outfile) << endl << setw(20) << setfill('-') << " " << endl;
 
-        outfile.close();
-    }
+    (*outfile) << id_params[ind_var] << '\t' <<
+                  "Energy" << '\t' <<
+                  "Standard deviance" << '\t' <<
+                  "Acceptance rate" << '\t' <<
+                  "Time" << endl;
 
-    return best_energy;
+    (*outfile).precision(10);
 }
 
-void output_VMC_data_header()
+void output_VMC_data(fstream *outfile, double *params,
+                     int ind_var, double energy, double stdev,
+                     double acceptance_rate, double delta_t)
 {
-
+    (*outfile) << params[ind_var] << '\t' <<
+                  energy << '\t' <<
+                  stdev << '\t' <<
+                  acceptance_rate << '\t' <<
+                  delta_t << endl;
 }
 
-void output_VMC_data()
+void output_VMC_data_end(fstream *outfile, double best_energy,
+                         string *id_params, int ind_best,
+                         double best_var)
 {
+        (*outfile) << setw(20) << setfill('-') << " " << endl;
+        (*outfile) << "Best energy: " << best_energy << '\t' <<
+                      " with " << id_params[ind_best] <<
+                      " = " << best_var << endl;
 
+        (*outfile).close();
 }
