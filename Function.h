@@ -1,10 +1,10 @@
 #ifndef FUNCTION_H
 #define FUNCTION_H
 
-/* Class for function implementation.
+/* Superclass for function implementation.
  *
  * This class is made to implement functions as
- * objects (functor) to be used by polymorphism.
+ * a subclass to be used by polymorphism.
  *
  * Functions are implemented as a sub-class of
  * this class, where the methods are overloaded

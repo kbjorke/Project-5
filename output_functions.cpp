@@ -28,13 +28,10 @@ void test_integrators()
     methods[2] = "MonteCarloBF";
     methods[3] = "MonteCarloIS";
 
-    output_method(methods[3]);
-    /*
     for( i = 2; i < 4; i++ )
     {
         output_method(methods[i]);
     }
-    */
 }
 
 void output_method(string method)
@@ -90,7 +87,7 @@ void output_method(string method)
             outfile.precision(10);
         }
 
-        for( N = 6; N <= 60; N += 6 )
+        for( N = 6; N <= 42; N += 6 )
         {
             if( my_rank == 0 )
             {
@@ -139,7 +136,7 @@ void output_method(string method)
             outfile.precision(10);
         }
 
-        for( N = 100; N <= 1e10; N *= 10 )
+        for( N = 100; N <= 1e9; N *= 10 )
         {
             if( my_rank == 0 )
             {
@@ -160,7 +157,7 @@ void output_method(string method)
                 outfile << setw(11) << setfill(' ') << N << '\t' <<
                            integral << '\t' <<
                            variance << '\t' <<
-                           time << endl;
+                           delta_t << endl;
             }
 
             MPI_Barrier(MPI_COMM_WORLD);
@@ -175,7 +172,7 @@ void output_method(string method)
 
 void output_VMC_data_header(fstream *outfile, int N, int ind_var,
                             double *params, int num_params,
-                            string *id_params)
+                            string *id_params, string trial_lable)
 {
     static int i;
 
@@ -202,6 +199,9 @@ void output_VMC_data_header(fstream *outfile, int N, int ind_var,
     (*outfile) << "QM Variational Monte Carlo: " << endl;
     (*outfile) << "Processors: " << numprocs << '\t' <<
                   "N: " << N << endl;
+    if( trial_lable.compare("none") != 0 ){
+        (*outfile) << "Trial: " << trial_lable << endl;
+    }
     (*outfile) << "Variational parameter: " << id_params[ind_var] << endl;
     (*outfile) << "Non-variational parameters: " << endl;
 
@@ -227,6 +227,7 @@ void output_VMC_data_header(fstream *outfile, int N, int ind_var,
                   "Energy" << '\t' <<
                   "Standard deviance" << '\t' <<
                   "Acceptance rate" << '\t' <<
+                  "delta" << '\t' <<
                   "Time" << endl;
 
     (*outfile).precision(10);
@@ -234,23 +235,26 @@ void output_VMC_data_header(fstream *outfile, int N, int ind_var,
 
 void output_VMC_data(fstream *outfile, double *params,
                      int ind_var, double energy, double stdev,
-                     double acceptance_rate, double delta_t)
+                     double acceptance_rate, double delta,
+                     double delta_t)
 {
     (*outfile) << params[ind_var] << '\t' <<
                   energy << '\t' <<
                   stdev << '\t' <<
                   acceptance_rate << '\t' <<
+                  delta << '\t' <<
                   delta_t << endl;
 }
 
 void output_VMC_data_end(fstream *outfile, double best_energy,
                          string *id_params, int ind_best,
-                         double best_var)
+                         double best_var, double total_t)
 {
         (*outfile) << setw(20) << setfill('-') << " " << endl;
         (*outfile) << "Best energy: " << best_energy << '\t' <<
                       " with " << id_params[ind_best] <<
                       " = " << best_var << endl;
+        (*outfile) << "Total time: " << total_t << " s " << endl;
 
         (*outfile).close();
 }

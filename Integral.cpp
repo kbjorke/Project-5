@@ -10,29 +10,62 @@
 #include "gaussiandeviate.h"
 #include "UnixTime.h"
 
+/* Constructor for Integral superclass.
+ *
+ * Takes the dimensionality of the integral as input and
+ * allocates memory for arguments array.
+ *
+ * Input:
+ *          dimension : Dimensionality of the integral,
+ *                      i.e. the number of variables to
+ *                      be given as argument to the function.
+ * */
 Integral::Integral(int dimension)
 {
     this->dimension = dimension;
     args = new double[dimension];
 }
 
+/* Constructor for Gaussian quadrature class.
+ *
+ * Takes the dimensionality of the integral as passes
+ * on the the Integral superclass, and allocates
+ * memory to the indices array, to be used in dimension loops.
+ * */
 GaussQuad::GaussQuad(int dimension) : Integral(dimension)
 {
     indices = new int[dimension];
 }
 
+/* Method dimension_loops.
+ *
+ * Used to preform a nested loop over all the dimensions
+ * in order to set arguments for the function evaluation.
+ *
+ * Input:
+ *                N : Number of points the integral will be
+ *                    evaluated per dimension.
+ *            *args : Pointer or array to be filled with
+ *                    arguments from the nested loops.
+ *              ind : The current index of the argument, or
+ *                    the current level of the loop.
+ *         *indices : Pointer or array containing the index
+ *                    of the current loop.
+ * */
 void GaussQuad::dimension_loops(int N, double *args, int ind, int *indices)
 {
     int i;
 
+    // Enter when the loop has reached its innermost level:
     if( ind == dimension )
     {
-        integral += new_term(args, ind, indices);
+        integral += new_term(args, indices);
     }
     else
     {
         for( i = 0; i < N; i++ )
         {
+            // Sets argument-points for the current dimension.
             args[ind] = x[i];
             indices[ind] = i;
             dimension_loops(N, args, ind+1, indices);
@@ -40,6 +73,19 @@ void GaussQuad::dimension_loops(int N, double *args, int ind, int *indices)
     }
 }
 
+/* Method operator().
+ *
+ * Used as a functor to solve the integral for a given function,
+ * integration points and integration limits.
+ *
+ * Input:
+ *           lower : Lower integration limit.
+ *           upper : Upper integration limit.
+ *        n_points : Number of points for the evaluation
+ *                   of the integral.
+ *              *f : Pointer to a functor object which
+ *                   represents the integrand.
+ * */
 double GaussQuad::operator()(double lower, double upper,
                   int n_points, Function *f)
 {
@@ -83,6 +129,23 @@ double GaussQuad::operator()(double lower, double upper,
 
 GaussLegendre::GaussLegendre(int dimension) : GaussQuad(dimension){}
 
+/* Method get_weigths.
+ *
+ * Used the function gauleg from the library lib.cpp to get the
+ * weigthts and integration points for Gauss-Legendre integration.
+ *
+ * Input:
+ *           lower : Lower integration limit.
+ *           upper : Upper integration limit.
+ *              *x : Pointer or array to be filled with the
+ *                   integration points for gaussian-legendre
+ *                   integration.
+ *              *w : Pointer or array to be filled with the
+ *                   integration weigths for gaussian-legendre
+ *                   integration.
+ *        n_points : Number of points for the evaluation
+ *                   of the integral.
+ * */
 void GaussLegendre::get_weigths(double lower, double upper,
                                  double *x, double *w,
                                  int n_points)
@@ -90,13 +153,24 @@ void GaussLegendre::get_weigths(double lower, double upper,
     gauleg(lower, upper, x, w, n_points);
 }
 
-double GaussLegendre::new_term(double *args, int ind, int *indices)
+/* Method new_term.
+ *
+ * Used to calculate new term for the integral.
+ *
+ * Input:
+ *           *args : Pointer or array which contains arguments
+ *                   for where the integrand will be evaluated.
+ *        *indices : Pointer or array containing indexes for
+ *                   current loop which are used t get the
+ *                   right weigth.
+ * */
+double GaussLegendre::new_term(double *args, int *indices)
 {
     static int i;
     static double term;
 
     term = (*func)(args);
-    for(i = 0; i < ind; i++ )
+    for(i = 0; i < dimension; i++ )
     {
         term *= w[indices[i]];
     }
@@ -106,6 +180,23 @@ double GaussLegendre::new_term(double *args, int ind, int *indices)
 
 GaussHermite::GaussHermite(int dimension) : GaussQuad(dimension){}
 
+/* Method get_weigths.
+ *
+ * Used the function gausshermite to get the weigthts and integration
+ * points for Gauss-Legendre integration.
+ *
+ * Input:
+ *           lower : Lower integration limit.
+ *           upper : Upper integration limit.
+ *              *x : Pointer or array to be filled with the
+ *                   integration points for gaussian-legendre
+ *                   integration.
+ *              *w : Pointer or array to be filled with the
+ *                   integration weigths for gaussian-legendre
+ *                   integration.
+ *        n_points : Number of points for the evaluation
+ *                   of the integral.
+ * */
 void GaussHermite::get_weigths(double lower, double upper,
                                  double *x, double *w,
                                  int n_points)
@@ -113,7 +204,20 @@ void GaussHermite::get_weigths(double lower, double upper,
     gausshermite(x, w, n_points);
 }
 
-double GaussHermite::new_term(double *args, int ind, int *indices)
+/* Method new_term.
+ *
+ * Used to calculate new term for the integral. Multiplies the
+ * term with exp(mu) wich is the inverse of the weigthfunction
+ * for Gauss-Hermite integration.
+ *
+ * Input:
+ *           *args : Pointer or array which contains arguments
+ *                   for where the integrand will be evaluated.
+ *        *indices : Pointer or array containing indexes for
+ *                   current loop which are used t get the
+ *                   right weigth.
+ * */
+double GaussHermite::new_term(double *args, int *indices)
 {
     static int i;
     static double term, mu;
@@ -121,7 +225,7 @@ double GaussHermite::new_term(double *args, int ind, int *indices)
     mu = 0;
 
     term = (*func)(args);
-    for(i = 0; i < ind; i++ )
+    for(i = 0; i < dimension; i++ )
     {
         term *= w[indices[i]];
         mu += args[i]*args[i];
@@ -132,8 +236,26 @@ double GaussHermite::new_term(double *args, int ind, int *indices)
 
 
 
+/* Constructor for Gaussian quadrature class.
+ *
+ * Takes the dimensionality of the integral as passes
+ * on the the Integral superclass.
+ * */
 MonteCarlo::MonteCarlo(int dimension) : Integral(dimension){}
 
+/* Method operator().
+ *
+ * Used as a functor to solve the integral for a given function,
+ * integration points and integration limits.
+ *
+ * Input:
+ *           lower : Lower integration limit.
+ *           upper : Upper integration limit.
+ *        n_points : Number of points for the evaluation
+ *                   of the integral.
+ *              *f : Pointer to a functor object which
+ *                   represents the integrand.
+ * */
 double MonteCarlo::operator()(double lower, double upper,
                                 int n_points, Function *f)
 {
@@ -150,6 +272,7 @@ double MonteCarlo::operator()(double lower, double upper,
 
     constant = constant_term(lower, upper);
 
+    //In order to make sure that the seed can change between quick calls
     time_int = (long int) (getUnixTime()*10000 + my_rank);
 
     set_seed(time_int);
@@ -182,6 +305,10 @@ double MonteCarlo::operator()(double lower, double upper,
     }
 }
 
+/* Method get_variance.
+ *
+ * Return the variance for the previously calcualted integral.
+ * */
 double MonteCarlo::get_variance()
 {
     return variance;
@@ -189,6 +316,15 @@ double MonteCarlo::get_variance()
 
 MonteCarloBF::MonteCarloBF(int dimension) : MonteCarlo(dimension){}
 
+/* Method constant_term.
+ *
+ * Returns constant term to be used in integration, here the
+ * Jacobideterminant because of change of variables.
+ *
+ * Input:
+ *           lower : Lower integration limit.
+ *           upper : Upper integration limit.
+ * */
 double MonteCarloBF::constant_term(double upper, double lower)
 {
     static int dim;
@@ -202,6 +338,15 @@ double MonteCarloBF::constant_term(double upper, double lower)
     return jacobidet;
 }
 
+/* Method new_term.
+ *
+ * Return new term for the integral, evaluated by a
+ * uniformly distributed random position.
+ *
+ * Input:
+ *           lower : Lower integration limit.
+ *           upper : Upper integration limit.
+ * */
 double MonteCarloBF::new_term(double lower, double upper)
 {
     static int dim;
@@ -210,30 +355,61 @@ double MonteCarloBF::new_term(double lower, double upper)
     for( dim = 0; dim < dimension; dim++ )
     {
         random_num = ran2(&idum);
-        //random_num = (double)rand() /  RAND_MAX;
         args[dim] = lower + random_num*(upper - lower);
     }
 
     return (*func)(args);
 }
 
+/* Method set_seed.
+ *
+ * Sets seed for random number generator.
+ *
+ * Input:
+ *          - seed : Seed to be set.
+ * */
 void MonteCarloBF::set_seed(long int seed)
 {
     static long int seed_;
 
+    // To make sure that the seed is not too large for the
+    // ran2() random number function:
     seed_ = seed - ((long int) seed/(int) 1e7)*(int) 1e7;
     idum = -seed_;
-    //srand(seed);
 }
 
 
 MonteCarloIS::MonteCarloIS(int dimension) : MonteCarlo(dimension){}
 
+/* Method constant_term.
+ *
+ * Returns constant term to be used in integration, here
+ * from a change of variables.
+ *
+ * Input:
+ *           lower : Lower integration limit.
+ *           upper : Upper integration limit.
+ * */
 double MonteCarloIS::constant_term(double upper, double lower)
 {
     return pow(acos(-1),dimension/2);
 }
 
+/* Method new_term.
+ *
+ * Return new term for the integral, evaluated by a
+ * gaussian distributed random position. Multilpies
+ * the function evaluation with exp(mu), which is the
+ * inverse of the probability distribution for
+ * Importance Sampling with a gaussian PDF.
+ *
+ * Input:
+ *           lower : Lower integration limit.
+ *           upper : Upper integration limit.
+ *
+ * NOTE: This is a to general implementation, should be rewritten
+ *       so that is can take a arbritary PDF.
+ * */
 double MonteCarloIS::new_term(double lower, double upper)
 {
     static int dim;
@@ -250,10 +426,19 @@ double MonteCarloIS::new_term(double lower, double upper)
     return (*func)(args)*exp(mu);
 }
 
+/* Method set_seed.
+ *
+ * Sets seed for random number generator.
+ *
+ * Input:
+ *          - seed : Seed to be set.
+ * */
 void MonteCarloIS::set_seed(long int seed)
 {
     static long int seed_;
 
+    // To make sure that the seed is not too large for the
+    // ran2() random number function:
     seed_ = seed - ((long int) seed/(int) 1e7)*(int) 1e7;
     idum = -seed_;
 }

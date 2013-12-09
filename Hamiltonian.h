@@ -6,8 +6,9 @@
 
 /* Class for implementation of Hamiltonian.
  *
- * Used create a callable object to represent the Hamiltonian
- * to be used for Quantum Mechanical problems.
+ * Used to create a callable object to represent the Hamiltonian
+ * to be used for Quantum Mechanical problems. Subclass of
+ * Observable superclass.
  *
  * Methods:
  *          - contructor     : Used to create Hamiltonian object.

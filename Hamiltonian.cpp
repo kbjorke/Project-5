@@ -1,5 +1,4 @@
 #include "Hamiltonian.h"
-#include <iostream>
 
 using namespace std;
 
@@ -24,9 +23,6 @@ double Hamiltonian::operator()(Function *psi, double *args)
 
     K = - 0.5*(*psi).derivative2(args);
 
-    //cout << K << " " << (*V)(args) << endl;
-    //cout << K + (*V)(args) << endl;
-
     return K + (*V)(args)*(*psi)(args);
 }
 
@@ -38,7 +34,7 @@ double Hamiltonian::operator()(Function *psi, double *args)
  *          *V : Pointer to a function object containing the
  *               potential to be added.
  *
- * NOTE: Mights add implementation or seperate method to add a
+ * NOTE: Might add implementation or seperate method to add a
  *       new/extra potentials to the Hamiltonian.
  * */
 void Hamiltonian::set_potential(Function *V)

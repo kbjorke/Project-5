@@ -22,7 +22,7 @@ Function::Function(int dimension)
     arg_m = new double[dimension];
     arg_p = new double[dimension];
 
-    h = 0.0001;
+    h = 0.0001; // To be used by numerical derivative.
 }
 
 /* Method set_params.

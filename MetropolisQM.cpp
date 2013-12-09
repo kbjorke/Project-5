@@ -22,18 +22,12 @@ MetropolisQM::MetropolisQM(int dimension)
     thermalization = 10; //default thermalization
 }
 
-void MetropolisQM::initialize(Function *psi,
-                              double delta, double *R_init)
+void MetropolisQM::initialize(Function *psi, double delta)
 {
     int i;
 
     this->psi = psi;
     this->delta = delta;
-
-    for( i = 0; i < dimension; i++ )
-    {
-        R[i] = R_init[i];
-    }
 }
 
 double MetropolisQM::operator()(Observable *O, int n_points)
@@ -47,26 +41,31 @@ double MetropolisQM::operator()(Observable *O, int n_points)
 
     local_energy = 0;
     local_variance = 0;
+    accepts = 0;
 
     energy = 0;
     variance = 0;
-    accepts = 0;
+    total_accepts = 0;
 
     time_int = (long int) (getUnixTime()*10000 + my_rank);
 
     set_seed(time_int);
 
-    therm = thermalization;
+    // Set random starting points
+    for( i = 0; i < 6; i++ )
+    {
+        R[i] = 2*ran2(&idum) - 1;
+    }
 
-    for( i = my_rank; i < n_points+therm; i += numprocs )
+    for( i = my_rank; i < n_points+thermalization; i += numprocs )
     {
         get_newpos(R,R_new);
 
         accept_test(R,R_new);
 
-        if( i >= therm )
+        if( i >= thermalization )
         {
-            loc_en = get_localenergy(R);
+            loc_en = get_localeigenvalue(R);
             local_energy += loc_en;
             local_variance += loc_en*loc_en;
         }
@@ -76,14 +75,11 @@ double MetropolisQM::operator()(Observable *O, int n_points)
            0, MPI_COMM_WORLD);
     MPI_Reduce(&local_variance, &variance, 1, MPI_DOUBLE, MPI_SUM,
            0, MPI_COMM_WORLD);
-    MPI_Reduce(&accepts, &total_accepts, 1, MPI_DOUBLE, MPI_SUM,
-           0, MPI_COMM_WORLD);
-    MPI_Reduce(&therm, &thermalization, 1, MPI_DOUBLE, MPI_SUM,
+    MPI_Reduce(&accepts, &total_accepts, 1, MPI_INT, MPI_SUM,
            0, MPI_COMM_WORLD);
 
     if( my_rank == 0 )
     {
-        thermalization = thermalization/numprocs;
         mean_energy = energy/n_points;
         std_energy = sqrt((variance/n_points -
                            mean_energy*mean_energy)/n_points);
@@ -107,7 +103,7 @@ double MetropolisQM::get_acceptance_rate()
 }
 
 
-double MetropolisQM::get_localenergy(double *R)
+double MetropolisQM::get_localeigenvalue(double *R)
 {
     return (*O)(psi, R) / (*psi)(R);
 }
@@ -120,7 +116,6 @@ void MetropolisQM::get_newpos(double *R, double *R_new)
     for( i = 0; i < dimension; i++ )
     {
         random_num = 2*ran2(&idum) - 1;
-        //random_num = 2*((double)rand() /  RAND_MAX) - 1;
         R_new[i] = R[i] + delta*random_num;
     }
 }
@@ -136,7 +131,6 @@ void MetropolisQM::accept_test(double *R, double *R_new)
     rel_prob = relative_probability(R, R_new);
 
     random_num = ran2(&idum);
-    //random_num = (double)rand() /  RAND_MAX;
 
     if( random_num <= rel_prob )
     {
@@ -166,7 +160,6 @@ void MetropolisQM::set_seed(long int seed)
 
     seed_ = seed - ((long int) seed/(int) 1e7)*(int) 1e7;
     idum = -seed_;
-    //srand(seed);
 }
 
 void MetropolisQM::set_thermalization(int thermalization)

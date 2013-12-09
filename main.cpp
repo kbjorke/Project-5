@@ -8,19 +8,23 @@
 #include "Function.h"
 #include "Integral.h"
 #include "Hamiltonian.h"
+#include "variational_MC.h"
+#include "MetropolisQM.h"
 #include "UnixTime.h"
 #include "problem_definitions.h"
 #include "output_functions.h"
+
 
 using namespace std;
 
 int main(int argc, char *argv[])
 {
-    double integral, upper, lower, variance, a;
-    double energy, std, acceptance_rate, delta, alpha;
-    double *R_init, *params;
-    int i, N;
+    double integral, upper, lower, variance, a, energy, delta;
+    double stdev, acceptance_rate, delta_t;
+    double *R_init, *params, *var_params;
+    int i, N, ind_var, num_params, num_var;
     char *method, *trial_psi;
+    string *id_params, trial_lable;
     bool solve_integral = false;
     bool integrators_test = false;
     bool VMC = false;
@@ -63,7 +67,7 @@ int main(int argc, char *argv[])
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
-
+    //if( solve_integral && strcmp(method, "Metropolis") != 0 )
     if( solve_integral )
     {
         Integrand integrand(6);
@@ -108,7 +112,52 @@ int main(int argc, char *argv[])
             cout << integral << endl;
             cout << time << endl;
         }
+
     }
+
+    /*
+    else if( solve_integral && strcmp(method, "Metropolis") == 0 )
+    {
+        Function *psi_trial;
+
+        psi_trial = new Psi_T1(6);
+
+        params = new double[1];
+        *params = 1;
+        (*psi_trial).set_params(params);
+
+        Observable *potential_energy;
+        potential_energy = new PotentialEnergy();
+
+        MetropolisQM metroQM(6);
+
+        delta = 0.7;
+
+        metroQM.initialize(psi_trial, delta);
+
+        if( my_rank == 0 )
+        {
+            t0 = getUnixTime();
+        }
+
+        energy = metroQM(potential_energy, N);
+
+        if( my_rank == 0 )
+        {
+            t1 = getUnixTime();
+
+            stdev = metroQM.get_std();
+            acceptance_rate = metroQM.get_acceptance_rate();
+            delta_t = t1 - t0;
+
+            cout << energy*pow(acos(-1),3) << endl;
+            cout << stdev << endl;
+            cout << acceptance_rate << endl;
+            cout << delta_t << endl;
+
+        }
+    }
+    */
 
     else if( integrators_test )
     {
@@ -122,12 +171,48 @@ int main(int argc, char *argv[])
         if( strcmp(trial_psi, "T1") == 0 ){
             psi_trial = new Psi_T1(6);
 
-            params = new double[1];
+            trial_lable = "Psi_T1";
+
+            num_params = 1;
+            num_var = 10001;
+            params = new double[num_params];
 
             *params = 1;
+
+            id_params =  new string[num_params];
+            id_params[0] = "alpha";
+
+            ind_var = 0;
+
+            var_params =  new double[num_var];
+            for( i = 0; i < num_var; i++ )
+            {
+                var_params[i] = 0.5 + i*0.0001;
+            }
         }
         if( strcmp(trial_psi, "T2") == 0 ){
             psi_trial = new Psi_T2(6);
+
+            trial_lable = "Psi_T2";
+
+            num_params = 2;
+            num_var = 1001;
+
+            params = new double[num_params];
+
+            params[0] = 1.0;
+
+            id_params =  new string[num_params];
+            id_params[0] = "alpha";
+            id_params[1] = "beta";
+
+            ind_var = 1;
+
+            var_params =  new double[num_var];
+            for( i = 0; i < num_var; i++ )
+            {
+                var_params[i] = 0.2 + i*0.0005;
+            }
         }
 
         Function *potential;
@@ -135,10 +220,14 @@ int main(int argc, char *argv[])
         if( nointeract )
         {
             potential = new V_HO(6);
+
+            trial_lable.append(" no-interaction");
         }
         else
         {
             potential = new V_TOT(6);
+
+            trial_lable.append(" interaction");
         }
 
 
@@ -148,33 +237,17 @@ int main(int argc, char *argv[])
 
         (*hamiltonian).set_potential(potential);
 
-        R_init = new double[6];
-        for( i = 0; i < 6; i++ )
-        {
-            if( i < 3 )
-            {
-                    R_init[i] = 1.0;
-            }
-            else
-            {
-                R_init[i] = -1.0;
-            }
-        }
-
-
-        double var_params[10];
-        for( i = 0; i < 10; i++ )
-        {
-            var_params[i] = 0.5 + i*0.1;
-        }
-        int ind_var = 0;
         double best_var;
-        string id_params[1];
-        id_params[0] = "alpha";
 
-        energy = variational_MC(psi_trial, hamiltonian, R_init,
-                                params, 1, var_params, ind_var,
-                                10, &best_var, id_params, N);
+        energy = variational_MC(psi_trial, hamiltonian,
+                                params, num_params, var_params,
+                                ind_var, num_var, &best_var,
+                                N, id_params, true, trial_lable);
+
+        if( my_rank == 0 )
+        {
+        cout << energy << endl;
+        }
     }
 
     MPI_Finalize();
